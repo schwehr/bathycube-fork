@@ -53,7 +53,6 @@ line-length = 120
 ignore = [
     "B008",     # function-call-in-default-argument
     "E722",     # bare-except
-    "F401",     # unused-import
     "F541",     # f-string-missing-placeholders
     "F811",     # redefined-while-unused
     "F841",     # unused-variable
@@ -130,7 +129,6 @@ disable = [
     "unnecessary-dunder-call",
     "unspecified-encoding",
     "unused-argument",
-    "unused-import",
     "unused-variable",
     "unused-wildcard-import",
     "use-implicit-booleaness-not-comparison",

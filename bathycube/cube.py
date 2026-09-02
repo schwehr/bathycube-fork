@@ -6,13 +6,11 @@ CUBE was developed as a research project within the Center of for Coastal and Oc
 Center (CCOM/JHC) at the University of New Hampshire, starting in the fall of 2000.
 """
 
-import sys
-import numpy as np
-from numba import types, typed
-from numba.experimental import jitclass
 import json
-from enum import Enum
 import logging
+import sys
+
+import numpy as np
 
 # ex using jitclass with composition: https://stackoverflow.com/questions/38682260/how-to-nest-numba-jitclass
 

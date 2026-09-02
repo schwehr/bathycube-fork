@@ -1,18 +1,17 @@
-import sys, os
 import numpy as np
-import json
-from enum import Enum
-
-# ex using jitclass with composition: https://stackoverflow.com/questions/38682260/how-to-nest-numba-jitclass
-from numba import types, typed, deferred_type
+from numba import (
+    deferred_type,
+    float32 as numbaf32,
+    float64 as numbaf64,
+    int32 as numbai32,
+    int64 as numbai64,
+    njit,
+    optional,
+    typed,
+    typeof,
+)
 from numba.core.types import unicode_type as numbastr
-from numba import float64 as numbaf64
-from numba import float32 as numbaf32
-from numba import int64 as numbai64
-from numba import int32 as numbai32
-from numba import boolean as numbabool
 from numba.experimental import jitclass
-from numba import jit, njit, config, typeof, optional, typed
 
 
 Debug = False
