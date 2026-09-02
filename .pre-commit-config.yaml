@@ -34,6 +34,12 @@ repos:
       - id: mdformat
         args: ["--wrap", "80"]
 
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args: ["--ignore-words-list=ans,astroid"]
+
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
