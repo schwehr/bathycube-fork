@@ -1,18 +1,25 @@
 import numpy as np
 from numba import (
     deferred_type,
-    float32 as numbaf32,
-    float64 as numbaf64,
-    int32 as numbai32,
-    int64 as numbai64,
     njit,
     optional,
     typed,
     typeof,
 )
+from numba import (
+    float32 as numbaf32,
+)
+from numba import (
+    float64 as numbaf64,
+)
+from numba import (
+    int32 as numbai32,
+)
+from numba import (
+    int64 as numbai64,
+)
 from numba.core.types import unicode_type as numbastr
 from numba.experimental import jitclass
-
 
 Debug = False
 

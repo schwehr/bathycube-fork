@@ -55,7 +55,6 @@ ignore = [
     "E722",     # bare-except
     "F541",     # f-string-missing-placeholders
     "F811",     # redefined-while-unused
-    "I001",     # unsorted-imports
     "PLR1730",  # if-stmt-min-max
     "RUF013",   # implicit-optional
     "S102",     # exec-builtin
@@ -130,7 +129,6 @@ disable = [
     "unused-wildcard-import",
     "use-implicit-booleaness-not-comparison",
     "wildcard-import",
-    "wrong-import-order",
 ]
 
 [tool.coverage.report]

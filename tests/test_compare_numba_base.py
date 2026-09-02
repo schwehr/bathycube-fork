@@ -1,8 +1,8 @@
 import numpy as np
 from pytest import approx
 
-from bathycube.numba_cube import run_cube_gridding as numbagrid
 from bathycube.cube import run_cube_gridding as basegrid
+from bathycube.numba_cube import run_cube_gridding as numbagrid
 
 
 def _build_data():
