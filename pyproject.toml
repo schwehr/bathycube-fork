@@ -7,7 +7,7 @@ name = "bathycube"
 dynamic = ["version"]
 description = "A Python implementation of the UNH CUBE module for gridding Bathymetric data."
 readme = "README.md"
-requires-python = ">=3.8.2"
+requires-python = ">=3.14"
 license = {text = "MIT"}
 authors = [
     {name = "Eric Younkin", email = "eric.g.younkin@noaa.gov"},
@@ -15,7 +15,7 @@ authors = [
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -32,3 +32,14 @@ version = {attr = "bathycube.__version__.__version__"}
 
 [tool.setuptools.packages.find]
 exclude = ["tests*"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+default = true
+
+
