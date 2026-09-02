@@ -38,11 +38,15 @@ dev = [
     "pre-commit",
     "pytest",
     "pytest-cov",
+    "ruff>=0.16.5",
 ]
 
 [[tool.uv.index]]
 url = "https://pypi.org/simple"
 default = true
+
+[tool.ruff]
+line-length = 120
 
 [tool.pytest.ini_options]
 addopts = "--cov=bathycube --cov-report=term-missing"

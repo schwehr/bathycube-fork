@@ -5,11 +5,11 @@ from bathycube.cube import *
 
 def test_cube_params():
     param = CubeParameters()
-    param.initialize('order1a', 0.5, 0.5)
+    param.initialize("order1a", 0.5, 0.5)
     assert param.grid_resolution_x == 0.5
     assert param.grid_resolution_y == 0.5
     assert param.inv_dist_exponent == 1 / 2.0
-    assert param.iho_order == 'order1a'
+    assert param.iho_order == "order1a"
 
 
 def test_cube_node_init():
@@ -272,12 +272,16 @@ def test_cube_node_queue_insert():
     median_data = cb.queue_insert(10.0, 1.0)
     assert np.allclose(np.array(5.2, dtype=np.float32), median_data[0])
     data = [d[0] for d in cb.queue]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
 
     median_data = cb.queue_insert(10.0, 1.0)
     assert np.allclose(np.array(5.5, dtype=np.float32), median_data[0])
     data = [d[0] for d in cb.queue]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
 
     median_data = cb.queue_insert(100.0, 1.0)  # this outlier will trigger truncation
     assert np.allclose(np.array(10.0, dtype=np.float32), median_data[0])
@@ -325,7 +329,7 @@ def test_cube_add_point_to_node():
 
 def test_cube_node_extract_depth_uncertainty():
     cb = CubeNode()
-    d, u, r = cb.extract_node_value(('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_node_value(("depth", "uncertainty", "ratio"))
     assert np.isnan(d)
     assert np.isnan(u)
     assert np.isnan(r)
@@ -333,7 +337,7 @@ def test_cube_node_extract_depth_uncertainty():
     cb = CubeNode()
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_node_value(('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_node_value(("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -342,7 +346,7 @@ def test_cube_node_extract_depth_uncertainty():
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
     cb.nominate_hypothesis(5.0)
-    d, u, r = cb.extract_node_value(('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_node_value(("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -360,7 +364,7 @@ def test_cube_node_extract_depth_uncertainty():
     cb.add_point_to_node(4.5, 0.5, 0.5, 0.25)
     cb.add_point_to_node(16.8, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_node_value(('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_node_value(("depth", "uncertainty", "ratio"))
     assert d == approx(4.686, abs=0.001)
     assert u == approx(0.524, abs=0.001)
     assert r == approx(3.25, abs=0.001)
@@ -368,7 +372,7 @@ def test_cube_node_extract_depth_uncertainty():
 
 def test_cube_node_extract_closest_depth_uncertainty():
     cb = CubeNode()
-    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert np.isnan(d)
     assert np.isnan(u)
     assert np.isnan(r)
@@ -376,7 +380,7 @@ def test_cube_node_extract_closest_depth_uncertainty():
     cb = CubeNode()
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -385,7 +389,7 @@ def test_cube_node_extract_closest_depth_uncertainty():
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
     cb.nominate_hypothesis(5.0)
-    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -403,7 +407,7 @@ def test_cube_node_extract_closest_depth_uncertainty():
     cb.add_point_to_node(4.5, 0.5, 0.5, 0.25)
     cb.add_point_to_node(16.8, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_closest_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(17.25, abs=0.001)
     assert u == approx(0.693, abs=0.001)
     assert r == approx(4.429, abs=0.001)
@@ -411,7 +415,7 @@ def test_cube_node_extract_closest_depth_uncertainty():
 
 def test_cube_node_extract_posterior_depth_uncertainty():
     cb = CubeNode()
-    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert np.isnan(d)
     assert np.isnan(u)
     assert np.isnan(r)
@@ -419,7 +423,7 @@ def test_cube_node_extract_posterior_depth_uncertainty():
     cb = CubeNode()
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -428,7 +432,7 @@ def test_cube_node_extract_posterior_depth_uncertainty():
     cb.add_point_to_node(5.0, 0.5, 0.5, 0.25)
     cb.flush_queue()
     cb.nominate_hypothesis(5.0)
-    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(5.0, abs=0.001)
     assert u == approx(1.385, abs=0.001)
     assert r == approx(0.0, abs=0.001)
@@ -446,7 +450,7 @@ def test_cube_node_extract_posterior_depth_uncertainty():
     cb.add_point_to_node(4.5, 0.5, 0.5, 0.25)
     cb.add_point_to_node(16.8, 0.5, 0.5, 0.25)
     cb.flush_queue()
-    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ('depth', 'uncertainty', 'ratio'))
+    d, u, r = cb.extract_posterior_weighted_node_value(15.0, 0.5, ("depth", "uncertainty", "ratio"))
     assert d == approx(17.25, abs=0.001)
     assert u == approx(0.693, abs=0.001)
     assert r == approx(4.429, abs=0.001)
@@ -472,17 +476,18 @@ def test_cube_node_hypothesis_count():
 
 
 def test_get_iho_limits_all_orders():
-    assert get_iho_limits('exclusive') == (0.15, 0.0075)
-    assert get_iho_limits('special') == (0.25, 0.0075)
-    assert get_iho_limits('order1a') == (0.5, 0.013)
-    assert get_iho_limits('order1b') == (0.5, 0.013)
-    assert get_iho_limits('order2') == (1.0, 0.023)
+    assert get_iho_limits("exclusive") == (0.15, 0.0075)
+    assert get_iho_limits("special") == (0.25, 0.0075)
+    assert get_iho_limits("order1a") == (0.5, 0.013)
+    assert get_iho_limits("order1b") == (0.5, 0.013)
+    assert get_iho_limits("order2") == (1.0, 0.023)
 
 
 def test_cube_parameters_io(tmp_path):
     import pytest
+
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
+    param.initialize("order1a", 1.0, 1.0)
     param.no_data_value = float(np.nan)
     filepath = str(tmp_path / "params.json")
     param.write_parameter_file(filepath)
@@ -491,7 +496,6 @@ def test_cube_parameters_io(tmp_path):
     param2.open_parameter_file(filepath)
     assert param2.grid_resolution_x == 1.0
     assert param2.grid_resolution_y == 1.0
-
 
     # Test error handling on write
     with pytest.raises(ValueError):
@@ -513,6 +517,7 @@ def test_cube_parameters_io(tmp_path):
 
 def test_cube_node_additional_branches():
     import pytest
+
     cb = CubeNode()
     # Null hypothesis
     cb.add_hypothesis(10.0, 0.5, null_hypothesis=True)
@@ -521,7 +526,7 @@ def test_cube_node_additional_branches():
     cb.dump_hypotheses()
 
     # Extract answer from null hypothesis
-    ans = cb._return_answer_from_hypothesis(cb.hypotheses[0], 1.0, ('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    ans = cb._return_answer_from_hypothesis(cb.hypotheses[0], 1.0, ("depth", "uncertainty", "ratio", "n_hypotheses"))
     assert np.isnan(ans[0])
     assert np.isnan(ans[1])
 
@@ -548,21 +553,21 @@ def test_cube_node_additional_branches():
     assert cb4.nominated.current_depth == 10.006
 
     # Return nominated answer with all value ids
-    nom_ans = cb4._return_nominated_answer(('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    nom_ans = cb4._return_nominated_answer(("depth", "uncertainty", "ratio", "n_hypotheses"))
     assert nom_ans[0] == 10.006
     assert nom_ans[2] == 0.0
     assert nom_ans[3] == 2
 
     # Variance selection options ('max', 'input')
     cb5 = CubeNode()
-    cb5.variance_selection = 'max'
+    cb5.variance_selection = "max"
     cb5.add_hypothesis(10.0, 0.5)
     cb5.hypotheses[0].variance_estimate = 1.0
-    ans_max = cb5.extract_node_value(('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    ans_max = cb5.extract_node_value(("depth", "uncertainty", "ratio", "n_hypotheses"))
     assert ans_max[0] == 10.0
 
-    cb5.variance_selection = 'input'
-    ans_input = cb5.extract_node_value(('depth', 'uncertainty'))
+    cb5.variance_selection = "input"
+    ans_input = cb5.extract_node_value(("depth", "uncertainty"))
     assert ans_input[0] == 10.0
 
     # return_depth and return_uncertainty
@@ -619,12 +624,22 @@ def test_cube_node_point_filtering():
 
 def test_cube_grid_and_gridding(tmp_path):
     import pytest
+
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
+    param.initialize("order1a", 1.0, 1.0)
     logfile = str(tmp_path / "test_cube.log")
-    grid = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=4, num_rows=4,
-                    resolution_x=1.0, resolution_y=1.0, param=param, use_queue=True,
-                    logfile=logfile, debug=True)
+    grid = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=4,
+        num_rows=4,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=True,
+        logfile=logfile,
+        debug=True,
+    )
 
     assert grid.total_nodes_count == 16
     assert grid.empty_nodes_count == 16
@@ -653,7 +668,7 @@ def test_cube_grid_and_gridding(tmp_path):
     assert grid.populated_nodes_count > 0
 
     # Test all grid extraction methods
-    for method in ['local', 'posterior', 'prior', 'predicted']:
+    for method in ["local", "posterior", "prior", "predicted"]:
         depth_grid = grid.get_grid_depth(method=method)
         unc_grid = grid.get_grid_uncertainty(method=method)
         ratio_grid = grid.get_grid_ratio(method=method)
@@ -667,7 +682,7 @@ def test_cube_grid_and_gridding(tmp_path):
     assert hyp_count_grid.shape == (4, 4)
 
     # Test run_cube_gridding with valid methods and custom kwargs
-    for method in ['local', 'posterior', 'prior', 'predicted']:
+    for method in ["local", "posterior", "prior", "predicted"]:
         dg, ug, rg, ng = run_cube_gridding(
             depth=np.array([10.0, 10.5]),
             horizontal_uncertainty=np.array([0.5, 0.5]),
@@ -679,10 +694,10 @@ def test_cube_grid_and_gridding(tmp_path):
             minimum_easting=100.0,
             maximum_northing=200.0,
             method=method,
-            iho_order='order1a',
+            iho_order="order1a",
             grid_resolution_x=1.0,
             grid_resolution_y=1.0,
-            dist_exponent=2.0
+            dist_exponent=2.0,
         )
         assert dg.shape == (4, 4)
 
@@ -698,18 +713,26 @@ def test_cube_grid_and_gridding(tmp_path):
             num_rows=4,
             minimum_easting=100.0,
             maximum_northing=200.0,
-            method='invalid_method',
-            iho_order='order1a',
+            method="invalid_method",
+            iho_order="order1a",
             grid_resolution_x=1.0,
-            grid_resolution_y=1.0
+            grid_resolution_y=1.0,
         )
 
 
 def test_cube_grid_multihypothesis_spatial_search():
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
-    grid = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=5, num_rows=5,
-                    resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+    param.initialize("order1a", 1.0, 1.0)
+    grid = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=5,
+        num_rows=5,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=False,
+    )
 
     # Set up node (2, 2) with 2 hypotheses
     node_multi = grid.grid[2][2]
@@ -721,15 +744,16 @@ def test_cube_grid_multihypothesis_spatial_search():
     node_single.add_hypothesis(10.2, 0.5)
 
     # Extract with 'local' and 'posterior'
-    vals_local = grid.get_grid_values(('depth', 'uncertainty'), method='local')
+    vals_local = grid.get_grid_values(("depth", "uncertainty"), method="local")
     assert not np.isnan(vals_local[0][2, 2])
 
-    vals_posterior = grid.get_grid_values(('depth', 'uncertainty'), method='posterior')
+    vals_posterior = grid.get_grid_values(("depth", "uncertainty"), method="posterior")
     assert not np.isnan(vals_posterior[0][2, 2])
 
 
 def test_cube_logging_and_filters(tmp_path):
     import logging
+
     log_file = str(tmp_path / "test.log")
     logger = return_logger(logfile=log_file, loglevel=logging.DEBUG)
     logger.debug("debug message")
@@ -761,12 +785,12 @@ def test_cube_logging_and_filters(tmp_path):
 
 
 def test_iho_limits():
-    assert get_iho_limits('exclusive') == (0.15, 0.0075)
-    assert get_iho_limits('special') == (0.25, 0.0075)
-    assert get_iho_limits('order1a') == (0.5, 0.013)
-    assert get_iho_limits('order1b') == (0.5, 0.013)
-    assert get_iho_limits('order2') == (1.0, 0.023)
-    assert get_iho_limits('unknown') is None
+    assert get_iho_limits("exclusive") == (0.15, 0.0075)
+    assert get_iho_limits("special") == (0.25, 0.0075)
+    assert get_iho_limits("order1a") == (0.5, 0.013)
+    assert get_iho_limits("order1b") == (0.5, 0.013)
+    assert get_iho_limits("order2") == (1.0, 0.023)
+    assert get_iho_limits("unknown") is None
 
 
 def test_cube_node_nominate_branches():
@@ -781,9 +805,9 @@ def test_cube_node_nominate_branches():
 def test_cube_node_update_hypothesis_variance_selection():
     cb = CubeNode()
     cb.add_hypothesis(10.0, 0.5)
-    cb.variance_selection = 'max'
+    cb.variance_selection = "max"
     assert cb.update_hypothesis(0, 10.1, 0.5)
-    cb.variance_selection = 'input'
+    cb.variance_selection = "input"
     assert cb.update_hypothesis(0, 10.1, 0.5)
 
 
@@ -859,20 +883,20 @@ def test_cube_node_return_answers_coverage():
     cb = CubeNode()
     cb.add_hypothesis(10.0, 0.5)
     cb.nominate_hypothesis(10.0)
-    vals = cb._return_nominated_answer(('depth', 'uncertainty', 'ratio', 'n_hypotheses', 'unknown'))
+    vals = cb._return_nominated_answer(("depth", "uncertainty", "ratio", "n_hypotheses", "unknown"))
     assert len(vals) == 4
 
     h = Hypothesis(10.0, 0.5)
     h.number_of_points = 5
     h.variance_estimate = 0.5
-    for var_sel in ['max', 'input', 'cube']:
+    for var_sel in ["max", "input", "cube"]:
         cb.variance_selection = var_sel
-        ans = cb._return_answer_from_hypothesis(h, 0.5, ('depth', 'uncertainty', 'ratio', 'n_hypotheses', 'unknown'))
+        ans = cb._return_answer_from_hypothesis(h, 0.5, ("depth", "uncertainty", "ratio", "n_hypotheses", "unknown"))
         assert len(ans) == 4
 
     h_empty = Hypothesis(10.0, 0.5)
     h_empty.number_of_points = 0
-    ans_empty = cb._return_answer_from_hypothesis(h_empty, 0.0, ('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    ans_empty = cb._return_answer_from_hypothesis(h_empty, 0.0, ("depth", "uncertainty", "ratio", "n_hypotheses"))
     assert all(np.isnan(x) for x in ans_empty)
 
 
@@ -893,9 +917,17 @@ def test_cube_node_extract_closest_posterior_empty_hypos():
 
 def test_cube_grid_insert_points_max_radius():
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
-    grid = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=4, num_rows=4,
-                    resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+    param.initialize("order1a", 1.0, 1.0)
+    grid = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=4,
+        num_rows=4,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=False,
+    )
     # Deep sounding with small horizontal uncertainty to hit radius > max_radius (line 1350)
     grid.insert_points(np.array([1000.0]), np.array([0.0001]), np.array([0.5]), np.array([101.5]), np.array([198.5]))
 
@@ -905,13 +937,21 @@ def test_cube_grid_insert_points_max_radius():
 
 def test_cube_grid_boundary_context_searches():
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
+    param.initialize("order1a", 1.0, 1.0)
     param.min_context = 1
     param.max_context = 2
 
     # Grid with multi-hypothesis at (0, 0) to hit negative target_row and target_col offsets
-    grid_bound = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=4, num_rows=4,
-                          resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+    grid_bound = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=4,
+        num_rows=4,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=False,
+    )
     n_corner = grid_bound.grid[0][0]
     n_corner.add_hypothesis(10.0, 0.5)
     n_corner.add_hypothesis(20.0, 0.5)
@@ -921,23 +961,31 @@ def test_cube_grid_boundary_context_searches():
         for n in r:
             n.predicted_depth = 10.0
             n.predicted_variance = 0.5
-    res_bound = grid_bound.get_grid_values(('depth',), method='local')
+    res_bound = grid_bound.get_grid_values(("depth",), method="local")
     assert res_bound[0].shape == (4, 4)
 
     # Test predicted extraction method on get_grid_values
-    res_predicted = grid_bound.get_grid_values(('depth',), method='predicted')
+    res_predicted = grid_bound.get_grid_values(("depth",), method="predicted")
     assert res_predicted[0].shape == (4, 4)
 
 
 def test_cube_grid_more_spatial_searches_and_shortcuts():
     param = CubeParameters()
-    param.initialize('order1a', 1.0, 1.0)
+    param.initialize("order1a", 1.0, 1.0)
     param.min_context = 1
     param.max_context = 2
 
     # Column search branch
-    grid_col = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=5, num_rows=5,
-                        resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+    grid_col = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=5,
+        num_rows=5,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=False,
+    )
     for r in grid_col.grid:
         for n in r:
             n.predicted_depth = 10.0
@@ -952,14 +1000,22 @@ def test_cube_grid_more_spatial_searches_and_shortcuts():
     node_col_single.add_hypothesis(10.2, 0.5)
     node_col_single.hypotheses[0].current_variance = 0.5
 
-    res_col_local = grid_col.get_grid_values(('depth', 'uncertainty'), method='local')
+    res_col_local = grid_col.get_grid_values(("depth", "uncertainty"), method="local")
     assert not np.isnan(res_col_local[0][2, 2])
-    res_col_post = grid_col.get_grid_values(('depth', 'uncertainty'), method='posterior')
+    res_col_post = grid_col.get_grid_values(("depth", "uncertainty"), method="posterior")
     assert not np.isnan(res_col_post[0][2, 2])
 
     # No neighbor found branch (fallback to basic node value extraction)
-    grid_none = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=5, num_rows=5,
-                         resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+    grid_none = CubeGrid(
+        minimum_easting=100.0,
+        maximum_northing=200.0,
+        num_columns=5,
+        num_rows=5,
+        resolution_x=1.0,
+        resolution_y=1.0,
+        param=param,
+        use_queue=False,
+    )
     for r in grid_none.grid:
         for n in r:
             n.predicted_depth = 10.0
@@ -970,20 +1026,20 @@ def test_cube_grid_more_spatial_searches_and_shortcuts():
     node_multi2.hypotheses[0].current_variance = 0.5
     node_multi2.hypotheses[1].current_variance = 0.5
 
-    res_none = grid_none.get_grid_values(('depth', 'uncertainty'), method='local')
+    res_none = grid_none.get_grid_values(("depth", "uncertainty"), method="local")
     assert not np.isnan(res_none[0][2, 2])
 
     # Test all shortcut methods across all method modes including unknown fallback
-    for m in ['local', 'posterior', 'prior', 'predicted']:
+    for m in ["local", "posterior", "prior", "predicted"]:
         assert grid_none.get_grid_depth(method=m).shape == (5, 5)
         assert grid_none.get_grid_uncertainty(method=m).shape == (5, 5)
         assert grid_none.get_grid_ratio(method=m).shape == (5, 5)
         assert len(grid_none.get_grid_depth_and_uncertainty(method=m)) == 2
 
-    assert grid_none.get_grid_depth(method='unknown') is None
-    assert grid_none.get_grid_uncertainty(method='unknown') is None
-    assert grid_none.get_grid_ratio(method='unknown') is None
-    assert grid_none.get_grid_depth_and_uncertainty(method='unknown') is None
+    assert grid_none.get_grid_depth(method="unknown") is None
+    assert grid_none.get_grid_uncertainty(method="unknown") is None
+    assert grid_none.get_grid_ratio(method="unknown") is None
+    assert grid_none.get_grid_depth_and_uncertainty(method="unknown") is None
 
     # Test empty_nodes_count when some nodes are populated
     assert grid_none.empty_nodes_count == 24
@@ -992,6 +1048,7 @@ def test_cube_grid_more_spatial_searches_and_shortcuts():
 
 def test_run_cube_gridding_extra_kwargs_and_main():
     import runpy
+
     # Test extra kwargs not in CubeParameters
     dg, ug, rg, ng = run_cube_gridding(
         depth=np.array([10.0]),
@@ -1003,14 +1060,15 @@ def test_run_cube_gridding_extra_kwargs_and_main():
         num_rows=4,
         minimum_easting=100.0,
         maximum_northing=200.0,
-        method='local',
-        iho_order='order1a',
+        method="local",
+        iho_order="order1a",
         grid_resolution_x=1.0,
         grid_resolution_y=1.0,
-        unknown_kwarg='ignored'
+        unknown_kwarg="ignored",
     )
     assert dg.shape == (4, 4)
 
     # Test running __main__ block
     import bathycube.cube
-    runpy.run_path(bathycube.cube.__file__, run_name='__main__')
+
+    runpy.run_path(bathycube.cube.__file__, run_name="__main__")

@@ -19,7 +19,21 @@ def _build_data():
 
     _numrows, _numcols = (3, 3)
     _resolution_x, _resolution_y = (1.0, 1.0)
-    return [_z, _thu, _tvu, _x, _y, _numcols, _numrows, min(_x), max(_y), 'local', 'order1a', _resolution_x, _resolution_y]
+    return [
+        _z,
+        _thu,
+        _tvu,
+        _x,
+        _y,
+        _numcols,
+        _numrows,
+        min(_x),
+        max(_y),
+        "local",
+        "order1a",
+        _resolution_x,
+        _resolution_y,
+    ]
 
 
 def test_base():
@@ -36,7 +50,7 @@ def test_base():
 
 def test_posterior():
     data_args = _build_data()
-    data_args[9] = 'posterior'
+    data_args[9] = "posterior"
 
     ndata = numbagrid(*data_args)
     bdata = basegrid(*data_args)
@@ -49,7 +63,7 @@ def test_posterior():
 
 def test_prior():
     data_args = _build_data()
-    data_args[9] = 'prior'
+    data_args[9] = "prior"
 
     ndata = numbagrid(*data_args)
     bdata = basegrid(*data_args)
@@ -62,7 +76,7 @@ def test_prior():
 
 def test_predicted():
     data_args = _build_data()
-    data_args[9] = 'predicted'
+    data_args[9] = "predicted"
 
     ndata = numbagrid(*data_args)
     bdata = basegrid(*data_args)
@@ -76,8 +90,8 @@ def test_predicted():
 def test_base_cube():
     data_args = _build_data()
 
-    ndata = numbagrid(*data_args, variance_selection='cube')
-    bdata = basegrid(*data_args, variance_selection='cube')
+    ndata = numbagrid(*data_args, variance_selection="cube")
+    bdata = basegrid(*data_args, variance_selection="cube")
 
     assert ndata[0] == approx(bdata[0], abs=0.001)
     assert ndata[1] == approx(bdata[1], abs=0.001)
@@ -88,8 +102,8 @@ def test_base_cube():
 def test_base_input():
     data_args = _build_data()
 
-    ndata = numbagrid(*data_args, variance_selection='input')
-    bdata = basegrid(*data_args, variance_selection='input')
+    ndata = numbagrid(*data_args, variance_selection="input")
+    bdata = basegrid(*data_args, variance_selection="input")
 
     assert ndata[0] == approx(bdata[0], abs=0.001)
     assert ndata[1] == approx(bdata[1], abs=0.001)
@@ -100,8 +114,8 @@ def test_base_input():
 def test_base_max():
     data_args = _build_data()
 
-    ndata = numbagrid(*data_args, variance_selection='max')
-    bdata = basegrid(*data_args, variance_selection='max')
+    ndata = numbagrid(*data_args, variance_selection="max")
+    bdata = basegrid(*data_args, variance_selection="max")
 
     assert ndata[0] == approx(bdata[0], abs=0.001)
     assert ndata[1] == approx(bdata[1], abs=0.001)

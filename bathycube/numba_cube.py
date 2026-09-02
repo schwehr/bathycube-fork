@@ -36,27 +36,47 @@ def get_iho_limits(iho_order: str):
     float
         'b' component, the variable component of the TVU equation
     """
-    if iho_order == 'exclusive':
+    if iho_order == "exclusive":
         return 0.15, 0.0075
-    elif iho_order == 'special':
+    elif iho_order == "special":
         return 0.25, 0.0075
-    elif iho_order == 'order1a':
+    elif iho_order == "order1a":
         return 0.5, 0.013
-    elif iho_order == 'order1b':
+    elif iho_order == "order1b":
         return 0.5, 0.013
-    elif iho_order == 'order2':
+    elif iho_order == "order2":
         return 1.0, 0.023
 
 
-cube_params_spec = {'iho_order': numbastr, 'grid_resolution_x': numbaf32, 'grid_resolution_y': numbaf32,
-                    'no_data_value': numbaf32, 'extractor': numbastr, 'depth_tolerance': numbaf32,
-                    'dist_exponent': numbaf64, 'inv_dist_exponent': numbaf64, 'dist_scale': numbaf64,
-                    'var_scale': numbaf64, 'iho_fixed': numbaf64, 'iho_percent': numbaf64, 'median_length': numbai32,
-                    'quotient_limit': numbaf64, 'max_hypothesis_ratio': numbaf32, 'discount': numbaf64,
-                    'est_offset': numbaf64, 'bayes_factor_threshold': numbai64, 'runlength_threshold': numbai32,
-                    'min_context': numbai32, 'max_context': numbai32, 'stddev_to_conf_scale': numbaf32,
-                    'blunder_min': numbaf32, 'blunder_percent': numbaf32, 'blunder_scalar': numbaf32,
-                    'capture_dist_scale': numbaf32, 'variance_selection': numbastr}
+cube_params_spec = {
+    "iho_order": numbastr,
+    "grid_resolution_x": numbaf32,
+    "grid_resolution_y": numbaf32,
+    "no_data_value": numbaf32,
+    "extractor": numbastr,
+    "depth_tolerance": numbaf32,
+    "dist_exponent": numbaf64,
+    "inv_dist_exponent": numbaf64,
+    "dist_scale": numbaf64,
+    "var_scale": numbaf64,
+    "iho_fixed": numbaf64,
+    "iho_percent": numbaf64,
+    "median_length": numbai32,
+    "quotient_limit": numbaf64,
+    "max_hypothesis_ratio": numbaf32,
+    "discount": numbaf64,
+    "est_offset": numbaf64,
+    "bayes_factor_threshold": numbai64,
+    "runlength_threshold": numbai32,
+    "min_context": numbai32,
+    "max_context": numbai32,
+    "stddev_to_conf_scale": numbaf32,
+    "blunder_min": numbaf32,
+    "blunder_percent": numbaf32,
+    "blunder_scalar": numbaf32,
+    "capture_dist_scale": numbaf32,
+    "variance_selection": numbastr,
+}
 
 
 @jitclass(cube_params_spec)
@@ -64,6 +84,7 @@ class CubeParameters:
     """
     Construct the parameters object to feed the cube algorithm the different parameters
     """
+
     def __init__(self, iho_order: numbastr, grid_resolution_x: numbaf32, grid_resolution_y: numbaf32):
         iho_fixed, iho_percent = get_iho_limits(iho_order)
         dist_scale = min(grid_resolution_x, grid_resolution_y)
@@ -76,14 +97,18 @@ class CubeParameters:
         self.grid_resolution_y = grid_resolution_y
 
         self.no_data_value = np.float32(np.nan)  # Value used to indicate no data
-        self.extractor = 'lhood'  # method used to extract information from sheet, one of 'lhood', 'prior', 'posterior', 'predsurf', 'union'
+        self.extractor = "lhood"  # method used to extract information from sheet, one of 'lhood', 'prior', 'posterior', 'predsurf', 'union'
         self.depth_tolerance = 0.01  # the maximum difference allowed when searching hypotheses by depth
         self.dist_exponent = dist_exponent  # exponent on distance for variance scale
         self.inv_dist_exponent = 1 / self.dist_exponent  # inverse of dist exponent for efficiency
         self.dist_scale = dist_scale  # normalization coefficient for distance
-        self.var_scale = dist_scale ** -dist_exponent  # variance scale dilution factor, placeholder, will be computed on initialization
+        self.var_scale = (
+            dist_scale**-dist_exponent
+        )  # variance scale dilution factor, placeholder, will be computed on initialization
         self.iho_fixed = iho_fixed  # fixed portion of IHO error budget, placeholder, will be computed on initialization
-        self.iho_percent = iho_percent  # variable portion of IHO error budget, placeholder, will be computed on initialization
+        self.iho_percent = (
+            iho_percent  # variable portion of IHO error budget, placeholder, will be computed on initialization
+        )
         self.median_length = 11  # Length of median pre-filter sort queue (must be odd number for algorithm)
         self.quotient_limit = 255.0  # Outlier quotient upper allowable limit, Approx. 0.1% F(1,6)
         self.max_hypothesis_ratio = 5.0  # ceiling to place on hypothesis strength ratios
@@ -102,7 +127,7 @@ class CubeParameters:
 
         # Controls the reported variance, one of 'cube' to use CUBE's posterior variance estimate, 'input' to track and
         #   use input sample variance, and 'max' to report the greater of the two
-        self.variance_selection = 'cube'
+        self.variance_selection = "cube"
 
 
 parameters_type = CubeParameters.class_type.instance_type
@@ -114,7 +139,7 @@ def return_default_cube_parameters(iho_order: str, grid_resolution_x: float, gri
     return cbp
 
 
-sounding_spec = {'depth': numbaf32, 'variance': numbaf32, 'vert_unc': numbaf32, 'horiz_unc': numbaf32}
+sounding_spec = {"depth": numbaf32, "variance": numbaf32, "vert_unc": numbaf32, "horiz_unc": numbaf32}
 
 
 @jitclass(sounding_spec)
@@ -135,9 +160,17 @@ def return_new_sounding(depth: numbaf32, variance: numbaf32, vert_unc: numbaf32,
     return snd
 
 
-hypothesis_spec = {'current_depth': numbaf32, 'current_variance': numbaf32, 'predict_depth': numbaf32,
-                   'predict_variance': numbaf32, 'cum_bayes_fac': numbaf32, 'seq_length': numbai32,
-                   'hypothesis_number': numbai32, 'number_of_samples': numbai32, 'variance_estimate': numbaf32}
+hypothesis_spec = {
+    "current_depth": numbaf32,
+    "current_variance": numbaf32,
+    "predict_depth": numbaf32,
+    "predict_variance": numbaf32,
+    "cum_bayes_fac": numbaf32,
+    "seq_length": numbai32,
+    "hypothesis_number": numbai32,
+    "number_of_samples": numbai32,
+    "variance_estimate": numbaf32,
+}
 
 
 @jitclass(hypothesis_spec)
@@ -165,8 +198,8 @@ def return_new_hypothesis(initial_mean_estimate: np.float32, initial_variance_es
 
 hypolist_spec = {}
 hypolist_type = deferred_type()
-hypolist_spec['data'] = hypothesis_type
-hypolist_spec['next_data'] = optional(hypolist_type)
+hypolist_spec["data"] = hypothesis_type
+hypolist_spec["next_data"] = optional(hypolist_type)
 
 
 @jitclass(hypolist_spec)
@@ -291,8 +324,8 @@ hypolist_type.define(HypothesisList.class_type.instance_type)
 
 queuelist_spec = {}
 queuelist_type = deferred_type()
-queuelist_spec['data'] = sounding_type
-queuelist_spec['next_data'] = optional(queuelist_type)
+queuelist_spec["data"] = sounding_type
+queuelist_spec["next_data"] = optional(queuelist_type)
 
 
 @jitclass(queuelist_spec)
@@ -365,13 +398,31 @@ class QueueList:
 queuelist_type.define(QueueList.class_type.instance_type)
 
 
-node_spec = {'queue': optional(queuelist_type), 'n_queued': numbai64, 'hypotheses': optional(hypolist_type),
-             'nominated': optional(typeof(return_new_hypothesis(0.0, 0.0))), 'predicted_depth': numbaf32,
-             'predicted_variance': numbaf32, 'depth_tolerance': numbaf32, 'bayes_factor_threshold': numbaf32,
-             'est_offset': numbaf32, 'runlength_threshold': numbai32, 'discount': numbaf32, 'quotient_limit': numbaf32,
-             'max_hypothesis_ratio': numbaf32, 'median_length': numbai32, 'blunder_min': numbaf32, 'blunder_percent': numbaf32,
-             'blunder_scalar': numbaf32, 'capture_dist_scale': numbaf32, 'var_scale': numbaf32, 'dist_exponent': numbaf32,
-             'stddev_to_conf_scale': numbaf32, 'no_data_value': numbaf32, 'variance_selection': numbastr}
+node_spec = {
+    "queue": optional(queuelist_type),
+    "n_queued": numbai64,
+    "hypotheses": optional(hypolist_type),
+    "nominated": optional(typeof(return_new_hypothesis(0.0, 0.0))),
+    "predicted_depth": numbaf32,
+    "predicted_variance": numbaf32,
+    "depth_tolerance": numbaf32,
+    "bayes_factor_threshold": numbaf32,
+    "est_offset": numbaf32,
+    "runlength_threshold": numbai32,
+    "discount": numbaf32,
+    "quotient_limit": numbaf32,
+    "max_hypothesis_ratio": numbaf32,
+    "median_length": numbai32,
+    "blunder_min": numbaf32,
+    "blunder_percent": numbaf32,
+    "blunder_scalar": numbaf32,
+    "capture_dist_scale": numbaf32,
+    "var_scale": numbaf32,
+    "dist_exponent": numbaf32,
+    "stddev_to_conf_scale": numbaf32,
+    "no_data_value": numbaf32,
+    "variance_selection": numbastr,
+}
 
 
 @jitclass(node_spec)
@@ -400,7 +451,7 @@ class CubeNode:
         self.dist_exponent = 2.0
         self.stddev_to_conf_scale = 1.96
         self.no_data_value = np.float32(np.nan)
-        self.variance_selection = 'cube'
+        self.variance_selection = "cube"
 
 
 node_type = CubeNode.class_type.instance_type
@@ -417,11 +468,24 @@ _test_grid_row.append(CubeNode())
 _test_grid.append(_test_grid_row)
 grid_attribute_type = typeof(_test_grid)
 
-grid_spec = {'minimum_easting': numbaf64, 'maximum_northing': numbaf64, 'num_columns': numbai64,
-             'num_rows': numbai64, 'resolution_x': numbaf64, 'resolution_y': numbaf64, 'params': parameters_type,
-             'no_data_value': numbaf32, 'dist_scale': numbaf64, 'inv_dist_exponent': numbaf64, 'min_context': numbai32,
-             'max_context': numbai32, 'iho_order': numbastr, 'iho_fixed': numbaf64, 'iho_percent': numbaf64,
-             'grid': grid_attribute_type}
+grid_spec = {
+    "minimum_easting": numbaf64,
+    "maximum_northing": numbaf64,
+    "num_columns": numbai64,
+    "num_rows": numbai64,
+    "resolution_x": numbaf64,
+    "resolution_y": numbaf64,
+    "params": parameters_type,
+    "no_data_value": numbaf32,
+    "dist_scale": numbaf64,
+    "inv_dist_exponent": numbaf64,
+    "min_context": numbai32,
+    "max_context": numbai32,
+    "iho_order": numbastr,
+    "iho_fixed": numbaf64,
+    "iho_percent": numbaf64,
+    "grid": grid_attribute_type,
+}
 
 
 @jitclass(grid_spec)
@@ -435,8 +499,16 @@ class CubeGrid:
     I have not looked into this yet.
     """
 
-    def __init__(self, minimum_easting: numbaf64, maximum_northing: numbaf64, num_columns: numbai64, num_rows: numbai64,
-                 resolution_x: numbaf64, resolution_y: numbaf64, params: parameters_type):
+    def __init__(
+        self,
+        minimum_easting: numbaf64,
+        maximum_northing: numbaf64,
+        num_columns: numbai64,
+        num_rows: numbai64,
+        resolution_x: numbaf64,
+        resolution_y: numbaf64,
+        params: parameters_type,
+    ):
         self.minimum_easting = minimum_easting
         self.maximum_northing = maximum_northing
 
@@ -484,8 +556,15 @@ grid_type = CubeNode.class_type.instance_type
 
 
 @njit
-def return_new_cubegrid(minimum_easting: numbaf64, maximum_northing: numbaf64, num_columns: numbai64, num_rows: numbai64,
-                       resolution_x: numbaf64, resolution_y: numbaf64, params: parameters_type):
+def return_new_cubegrid(
+    minimum_easting: numbaf64,
+    maximum_northing: numbaf64,
+    num_columns: numbai64,
+    num_rows: numbai64,
+    resolution_x: numbaf64,
+    resolution_y: numbaf64,
+    params: parameters_type,
+):
     # due to pickling errors in nested numba jitclasses, you cannot return this class and access it outside of njit functions
     # https://github.com/numba/numba/issues/6640
     cg = CubeGrid(minimum_easting, maximum_northing, num_columns, num_rows, resolution_x, resolution_y, params)
@@ -508,14 +587,14 @@ def cube_node_new_hypothesis(node: CubeNode, new_sounding: Sounding):
     new_hypo = return_new_hypothesis(new_sounding.depth, new_sounding.variance)
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_new_hypothesis: New hypothesis generated, no preexisting hypotheses')
+            print("cube_node_new_hypothesis: New hypothesis generated, no preexisting hypotheses")
         new_hypo.hypothesis_number = 1
         node.hypotheses = HypothesisList(new_hypo, None)
     else:
         new_hypo.hypothesis_number = len(node.hypotheses.get_data()) + 1
         node.hypotheses.append(new_hypo)
         if Debug:
-            print('cube_node_new_hypothesis: New hypothesis generated, existing hypotheses found')
+            print("cube_node_new_hypothesis: New hypothesis generated, existing hypotheses found")
 
 
 @njit
@@ -541,12 +620,12 @@ def cube_node_remove_hypothesis(node: CubeNode, depth: numbaf32):
 
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_remove_hypothesis: unable to remove hypothesis, no hypotheses found')
+            print("cube_node_remove_hypothesis: unable to remove hypothesis, no hypotheses found")
         return False
     nearest_index = node.hypotheses.get_nearest_in_depth(depth, node.depth_tolerance)
     if nearest_index < 0:
         if Debug:
-            print('cube_node_remove_hypothesis: unable to find hypothesis nearest in depth within depth tolerance')
+            print("cube_node_remove_hypothesis: unable to find hypothesis nearest in depth within depth tolerance")
         return False
     if nearest_index == 0 and node.hypotheses.next_data is None:
         hypo = node.hypotheses.data
@@ -556,11 +635,15 @@ def cube_node_remove_hypothesis(node: CubeNode, depth: numbaf32):
         node.hypotheses = node.hypotheses.drop_first()
     else:
         hypo = node.hypotheses.remove(nearest_index)
-    if hypo is not None and node.nominated is not None and (hypo.number_of_samples == node.nominated.number_of_samples) and \
-            (hypo.current_depth == node.nominated.current_depth):
+    if (
+        hypo is not None
+        and node.nominated is not None
+        and (hypo.number_of_samples == node.nominated.number_of_samples)
+        and (hypo.current_depth == node.nominated.current_depth)
+    ):
         node.nominated = None
         if Debug:
-            print('cube_node_remove_hypothesis: removed a nominated hypothesis, clearing nominated attribute')
+            print("cube_node_remove_hypothesis: removed a nominated hypothesis, clearing nominated attribute")
     return True
 
 
@@ -588,22 +671,22 @@ def cube_node_nominate_hypothesis(node: CubeNode, depth: numbaf32):
 
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_nominate_hypothesis: unable to nominate hypothesis, no hypotheses found')
+            print("cube_node_nominate_hypothesis: unable to nominate hypothesis, no hypotheses found")
         return False
     node.nominated = None
     nearest_index = node.hypotheses.get_nearest_in_depth(depth, node.depth_tolerance)
     if nearest_index < 0:
         if Debug:
-            print('cube_node_nominate_hypothesis: unable to find hypothesis nearest in depth within depth tolerance')
+            print("cube_node_nominate_hypothesis: unable to find hypothesis nearest in depth within depth tolerance")
         return False
     hypo = node.hypotheses.get_item(nearest_index)
     if hypo is None:
         if Debug:
-            print('cube_node_nominate_hypothesis: unable to find hypothesis at nearest index')
+            print("cube_node_nominate_hypothesis: unable to find hypothesis at nearest index")
         return False
     node.nominated = hypo
     if Debug:
-        print('cube_node_nominate_hypothesis: successfully nominated existing hypothesis')
+        print("cube_node_nominate_hypothesis: successfully nominated existing hypothesis")
     return True
 
 
@@ -619,7 +702,7 @@ def cube_node_reset_nomination(node: CubeNode):
     """
 
     if Debug:
-        print('cube_node_reset_nomination: cleared nominated hypothesis')
+        print("cube_node_reset_nomination: cleared nominated hypothesis")
     node.nominated = None
     return True
 
@@ -655,7 +738,7 @@ def cube_node_set_preddepth(node: CubeNode, new_sounding: Sounding):
     """
 
     if Debug:
-        print('cube_node_set_preddepth: set new predicted depth/variance')
+        print("cube_node_set_preddepth: set new predicted depth/variance")
     node.predicted_depth = new_sounding.depth
     node.predicted_variance = new_sounding.variance
 
@@ -684,26 +767,27 @@ def cube_node_monitor_hypothesis(node: CubeNode, hypo_index: numbai32, new_sound
 
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_monitor_hypothesis: unable to monitor hypothesis, no hypotheses found')
+            print("cube_node_monitor_hypothesis: unable to monitor hypothesis, no hypotheses found")
         return False
     hypo = node.hypotheses.get_item(hypo_index)
     if hypo is None:
         if Debug:
-            print('cube_node_monitor_hypothesis: unable to find hypothesis at index')
+            print("cube_node_monitor_hypothesis: unable to find hypothesis at index")
         return False
     forecast_variance = hypo.predict_variance + new_sounding.variance
     error = (new_sounding.depth - hypo.predict_depth) / np.sqrt(forecast_variance)
 
     if error >= 0:
-        bayes_factor = np.exp(0.5 * (node.est_offset ** 2 - (2.0 * node.est_offset * error)))
+        bayes_factor = np.exp(0.5 * (node.est_offset**2 - (2.0 * node.est_offset * error)))
     else:
-        bayes_factor = np.exp(0.5 * (node.est_offset ** 2 + (2.0 * node.est_offset * error)))
+        bayes_factor = np.exp(0.5 * (node.est_offset**2 + (2.0 * node.est_offset * error)))
 
     if bayes_factor < node.bayes_factor_threshold:
         if Debug:
-            print('cube_node_monitor_hypothesis: bayes factor less than minimum threshold, outlier by single component Bayes factor')
+            print(
+                "cube_node_monitor_hypothesis: bayes factor less than minimum threshold, outlier by single component Bayes factor"
+            )
         return False
-
 
     if hypo.cum_bayes_fac < 1.0:
         hypo.seq_length = hypo.seq_length + 1
@@ -713,10 +797,12 @@ def cube_node_monitor_hypothesis(node: CubeNode, hypo_index: numbai32, new_sound
 
     if (hypo.cum_bayes_fac < node.bayes_factor_threshold) or (hypo.seq_length > node.runlength_threshold):
         if Debug:
-            print('cube_node_monitor_hypothesis: cum bayes fac < bayes_factor_threshold or seq length > runlength_threshold, potential outlier')
+            print(
+                "cube_node_monitor_hypothesis: cum bayes fac < bayes_factor_threshold or seq length > runlength_threshold, potential outlier"
+            )
         return False
     if Debug:
-        print('cube_node_monitor_hypothesis: no intervention required')
+        print("cube_node_monitor_hypothesis: no intervention required")
     return True
 
 
@@ -739,17 +825,17 @@ def cube_node_reset_monitor(node: CubeNode, hypo_index: numbai32):
     """
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_reset_monitor: unable to reset monitor, no hypotheses found')
+            print("cube_node_reset_monitor: unable to reset monitor, no hypotheses found")
         return False
     hypo = node.hypotheses.get_item(hypo_index)
     if hypo is None:
         if Debug:
-            print('cube_node_reset_monitor: unable to find hypothesis at index')
+            print("cube_node_reset_monitor: unable to find hypothesis at index")
         return False
     hypo.cum_bayes_fac = 1.0
     hypo.seq_length = 0
     if Debug:
-        print('cube_node_reset_monitor: reset monitor')
+        print("cube_node_reset_monitor: reset monitor")
     return True
 
 
@@ -781,31 +867,35 @@ def cube_node_update_hypothesis(node: CubeNode, hypo_index: numbai32, new_soundi
 
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_update_hypothesis: unable to update hypothesis, no hypotheses found')
+            print("cube_node_update_hypothesis: unable to update hypothesis, no hypotheses found")
         return False
     hypo = node.hypotheses.get_item(hypo_index)
     if hypo is None:
         if Debug:
-            print('cube_node_update_hypothesis: unable to find hypothesis at index')
+            print("cube_node_update_hypothesis: unable to find hypothesis at index")
         return False
     monitoring_answer = cube_node_monitor_hypothesis(node, hypo_index, new_sounding)
     if not monitoring_answer:
         if Debug:
-            print('cube_node_update_hypothesis: monitoring determined an intervention is required')
+            print("cube_node_update_hypothesis: monitoring determined an intervention is required")
         return False
-    if node.variance_selection != 'cube':
-        hypo.variance_estimate = numbaf32((hypo.number_of_samples - 1) * hypo.variance_estimate / hypo.number_of_samples +
-                                          (((new_sounding.depth - hypo.current_depth) ** 2) / hypo.number_of_samples))
+    if node.variance_selection != "cube":
+        hypo.variance_estimate = numbaf32(
+            (hypo.number_of_samples - 1) * hypo.variance_estimate / hypo.number_of_samples
+            + (((new_sounding.depth - hypo.current_depth) ** 2) / hypo.number_of_samples)
+        )
     sys_variance = hypo.current_variance * numbaf32(1.0 - node.discount) / node.discount
     gain = hypo.predict_variance / numbaf32(new_sounding.variance + hypo.predict_variance)
     innovation = new_sounding.depth - hypo.predict_depth
     hypo.predict_depth = hypo.predict_depth + (gain * innovation)
     hypo.current_depth = hypo.predict_depth
-    hypo.current_variance = new_sounding.variance * hypo.predict_variance / (new_sounding.variance + hypo.predict_variance)
+    hypo.current_variance = (
+        new_sounding.variance * hypo.predict_variance / (new_sounding.variance + hypo.predict_variance)
+    )
     hypo.predict_variance = hypo.current_variance + sys_variance
     hypo.number_of_samples = hypo.number_of_samples + 1
     if Debug:
-        print('cube_node_update_hypothesis: node hypothesis updated with new depth/variance')
+        print("cube_node_update_hypothesis: node hypothesis updated with new depth/variance")
     return True
 
 
@@ -833,11 +923,11 @@ def cube_node_best_hypothesis_index(node: CubeNode, new_sounding: Sounding):
     """
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_best_hypothesis_index: unable to query for best hypothesis index, no hypotheses found')
+            print("cube_node_best_hypothesis_index: unable to query for best hypothesis index, no hypotheses found")
         return -1
     nearest_index = node.hypotheses.get_nearest_min_error(new_sounding.depth, new_sounding.variance)
     if Debug:
-        print('cube_node_best_hypothesis_index: gathered new index for the best hypothesis')
+        print("cube_node_best_hypothesis_index: gathered new index for the best hypothesis")
     return nearest_index
 
 
@@ -870,17 +960,17 @@ def cube_node_update_node(node: CubeNode, new_sounding: Sounding):
         # didn't match one, should only happen where there are no hypothesis, so we add a new one
         cube_node_new_hypothesis(node, new_sounding)
         if Debug:
-            print('cube_node_update_node: no hypotheses found, so we added a new one')
+            print("cube_node_update_node: no hypotheses found, so we added a new one")
     else:
         updated = cube_node_update_hypothesis(node, best_idx, new_sounding)
         if not updated:
             cube_node_reset_monitor(node, best_idx)
             cube_node_new_hypothesis(node, new_sounding)
             if Debug:
-                print('cube_node_update_node: failed update, required intervention so we start a new hypothesis')
+                print("cube_node_update_node: failed update, required intervention so we start a new hypothesis")
         else:
             if Debug:
-                print('cube_node_update_node: existing best hypothesis successfully updated')
+                print("cube_node_update_node: existing best hypothesis successfully updated")
     return True
 
 
@@ -902,11 +992,11 @@ def cube_node_truncate(node: CubeNode):
     """
 
     if node.n_queued < 3:
-        print('cube_node_truncate: with too few queued points, truncate skipped')
+        print("cube_node_truncate: with too few queued points, truncate skipped")
         return
     if node.queue is None:
         if Debug:
-            print('cube_node_truncate: unable to truncate, no queue found')
+            print("cube_node_truncate: unable to truncate, no queue found")
         return
     mean = 0.0
     sum_square_diff = 0.0
@@ -914,10 +1004,10 @@ def cube_node_truncate(node: CubeNode):
     queue_data = node.queue.get_data()
     for nsounding in queue_data:
         mean += nsounding.depth
-        sum_square_diff += nsounding.depth ** 2
-    sum_square_diff -= (mean ** 2) / (num_points + 1)
-    mean /= (num_points + 1)
-    sum_square_diff_k = num_points * sum_square_diff / (num_points ** 2 - 1)
+        sum_square_diff += nsounding.depth**2
+    sum_square_diff -= (mean**2) / (num_points + 1)
+    mean /= num_points + 1
+    sum_square_diff_k = num_points * sum_square_diff / (num_points**2 - 1)
 
     outlier_index = np.zeros((num_points,), dtype=np.int32)
     outliers = 0
@@ -927,7 +1017,7 @@ def cube_node_truncate(node: CubeNode):
         quot = diff_sq / (sum_square_diff_k - (diff_sq / (num_points - 1)))
         if quot >= node.quotient_limit:
             if Debug:
-                print('cube_node_truncate: point flagged for removal with quotient value greater than limit')
+                print("cube_node_truncate: point flagged for removal with quotient value greater than limit")
             outlier_index[outliers] = cnt
             outliers += 1
 
@@ -956,7 +1046,7 @@ def cube_node_queue_flush_node(node: CubeNode):
     """
 
     if node.n_queued == 0:
-        print('cube_node_queue_flush_node: with no points, flush skipped')
+        print("cube_node_queue_flush_node: with no points, flush skipped")
         return
     scale = 1
     cube_node_truncate(node)
@@ -999,7 +1089,7 @@ def cube_node_choose_hypothesis(node: CubeNode):
 
     if node.hypotheses is None:
         if Debug:
-            print('cube_node_choose_hypothesis: unable to query for best hypothesis index, no hypotheses found')
+            print("cube_node_choose_hypothesis: unable to query for best hypothesis index, no hypotheses found")
         return None, None
     hypo_ratio = 0.0
     idx, current_max_pointcount, second_highest_count = node.hypotheses.get_max_sample()
@@ -1023,7 +1113,7 @@ def cube_node_queue_fill(node: CubeNode, new_sounding: Sounding):
     """
     if node.n_queued == 0:
         if Debug:
-            print('cube_node_queue_fill: queue is empty, adding depth and variance to queue')
+            print("cube_node_queue_fill: queue is empty, adding depth and variance to queue")
         node.queue = QueueList(new_sounding, None)
     else:
         insertion_index = None
@@ -1036,14 +1126,14 @@ def cube_node_queue_fill(node: CubeNode, new_sounding: Sounding):
 
         if insertion_index is not None:
             if Debug:
-                print('cube_node_queue_fill: inserted, adding depth, variance to queue')
+                print("cube_node_queue_fill: inserted, adding depth, variance to queue")
             if insertion_index == 0:
                 node.queue = node.queue.prepend(new_sounding)
             else:
                 node.queue.insert(new_sounding, insertion_index)
         else:
             if Debug:
-                print('cube_node_queue_fill: adding to beginning of queue, adding depth, variance to queue')
+                print("cube_node_queue_fill: adding to beginning of queue, adding depth, variance to queue")
             node.queue = node.queue.prepend(new_sounding)
     node.n_queued = numbai64(node.n_queued + 1)
 
@@ -1084,14 +1174,14 @@ def cube_node_queue_insert(node: CubeNode, new_sounding: Sounding):
 
     if insertion_index is not None:
         if Debug:
-            print('cube_node_queue_insert: queue full, inserted at index, adding depth, variance to queue')
+            print("cube_node_queue_insert: queue full, inserted at index, adding depth, variance to queue")
         if insertion_index == 0:
             node.queue = node.queue.prepend(new_sounding)
         else:
             node.queue.insert(new_sounding, insertion_index)
     else:
         if Debug:
-            print('cube_node_queue_insert: queue full, adding to end of queue, adding depth, variance to queue')
+            print("cube_node_queue_insert: queue full, adding to end of queue, adding depth, variance to queue")
         node.queue.append(new_sounding)
 
     # 2.56 being the 99 percent confidence interval for normal distribution
@@ -1103,7 +1193,7 @@ def cube_node_queue_insert(node: CubeNode, new_sounding: Sounding):
     if low_water >= high_water:  # confidence limits do not overlap
         cube_node_truncate(node)  # remove any outliers
     if Debug:
-        print('cube_node_queue_insert: queue full, returning median point depth, variance')
+        print("cube_node_queue_insert: queue full, returning median point depth, variance")
 
     return m_sounding
 
@@ -1135,7 +1225,7 @@ def cube_node_add_to_queue(node: CubeNode, new_sounding: Sounding):
     """
 
     if Debug:
-        print('cube_node_add_to_queue: adding depth, variance to the queue')
+        print("cube_node_add_to_queue: adding depth, variance to the queue")
     if node.queue is None:
         node.n_queued = numbai64(0)
     if node.n_queued < node.median_length:
@@ -1170,7 +1260,7 @@ def cube_node_insert(node: CubeNode, new_sounding: Sounding, distance_to_node: n
     conf_95_percent = 1.96
     if np.isnan(node.predicted_depth):
         if Debug:
-            print('cube_node_insert: Sounding rejected with predicted depth of NaN')
+            print("cube_node_insert: Sounding rejected with predicted depth of NaN")
         return True
     dist = numbaf32(np.sqrt(distance_to_node))
     if node.predicted_depth:
@@ -1181,19 +1271,19 @@ def cube_node_insert(node: CubeNode, new_sounding: Sounding, distance_to_node: n
         blunder_limit = min(blunder_limit, target_depth - node.blunder_scalar * np.sqrt(node.predicted_variance))
         if new_sounding.depth < blunder_limit:
             if Debug:
-                print('cube_node_insert: Sounding rejected with predicted depth used, less than blunder limit')
+                print("cube_node_insert: Sounding rejected with predicted depth used, less than blunder limit")
             return True
     else:
         if Debug:
-            print('cube_node_insert: Blunder limit test pass, no predicted depth for this node')
+            print("cube_node_insert: Blunder limit test pass, no predicted depth for this node")
         target_depth = new_sounding.depth
     calculated_captdist = node.capture_dist_scale * abs(target_depth)
     if dist > max(calculated_captdist, 0.5):
         if Debug:
-            print('cube_node_insert: sounding rejected, dist greater than max(0.5 or calculated capture distance)')
+            print("cube_node_insert: sounding rejected, dist greater than max(0.5 or calculated capture distance)")
         return True
     if Debug:
-        print('cube_node_insert: sounding accepted at node')
+        print("cube_node_insert: sounding accepted at node")
     # add horizontal positioning uncertainty, assumes 2sigma
     dist += conf_95_percent * np.sqrt(new_sounding.horiz_unc)
     # TODO this asked for range (range != 0) in the original source, don't have range
@@ -1201,17 +1291,17 @@ def cube_node_insert(node: CubeNode, new_sounding: Sounding, distance_to_node: n
     if sounding_range != 0.0 and (not np.isnan(node.predicted_depth) and node.predicted_depth):
         offset = node.predicted_depth - new_sounding.depth
         if Debug:
-            print('cube_node_insert: adding offset to depth')
+            print("cube_node_insert: adding offset to depth")
     else:
         offset = 0.0
 
     # build new depth/variance
     new_sounding.depth += numbaf32(offset)
-    new_sounding.variance = new_sounding.vert_unc * numbaf32(1.0 + node.var_scale * (dist ** node.dist_exponent))
+    new_sounding.variance = new_sounding.vert_unc * numbaf32(1.0 + node.var_scale * (dist**node.dist_exponent))
     added = cube_node_add_to_queue(node, new_sounding)
     if not added:
         if Debug:
-            print('cube_node_insert: failed to add to node')
+            print("cube_node_insert: failed to add to node")
         return False
     node.nominated = None
     return True
@@ -1244,7 +1334,7 @@ def cube_node_get_nominated_depth_uncertainty(node: CubeNode):
         return depth, uncertainty, ratio
     else:
         if Debug:
-            print('cube_node_get_nominated_depth_uncertainty: unable to get hypothesis answer, no samples found')
+            print("cube_node_get_nominated_depth_uncertainty: unable to get hypothesis answer, no samples found")
         return node.no_data_value, node.no_data_value, node.no_data_value
 
 
@@ -1272,9 +1362,11 @@ def cube_node_get_generic_hypothesis_depth_uncertainty(node: CubeNode, hypo: Hyp
 
     if hypo.number_of_samples > 0:
         depth = hypo.current_depth
-        if node.variance_selection == 'max':
-            uncertainty = node.stddev_to_conf_scale * numbaf32(np.sqrt(max(hypo.current_variance, hypo.variance_estimate)))
-        elif node.variance_selection == 'input':
+        if node.variance_selection == "max":
+            uncertainty = node.stddev_to_conf_scale * numbaf32(
+                np.sqrt(max(hypo.current_variance, hypo.variance_estimate))
+            )
+        elif node.variance_selection == "input":
             uncertainty = node.stddev_to_conf_scale * numbaf32(np.sqrt(hypo.variance_estimate))
         else:
             uncertainty = node.stddev_to_conf_scale * numbaf32(np.sqrt(hypo.current_variance))
@@ -1282,7 +1374,9 @@ def cube_node_get_generic_hypothesis_depth_uncertainty(node: CubeNode, hypo: Hyp
         return depth, uncertainty, ratio
     else:
         if Debug:
-            print('cube_node_get_generic_hypothesis_depth_uncertainty: unable to get hypothesis answer, no samples found')
+            print(
+                "cube_node_get_generic_hypothesis_depth_uncertainty: unable to get hypothesis answer, no samples found"
+            )
         return node.no_data_value, node.no_data_value, node.no_data_value
 
 
@@ -1308,29 +1402,31 @@ def cube_node_extract_depth_uncertainty(node: CubeNode):
 
     if node.nominated is not None:
         if Debug:
-            print('cube_node_extract_depth_uncertainty: getting the nominated hypothesis answer')
+            print("cube_node_extract_depth_uncertainty: getting the nominated hypothesis answer")
         depth, uncertainty, ratio = cube_node_get_nominated_depth_uncertainty(node)
         return depth, uncertainty, ratio
     elif node.hypotheses is None:
         if Debug:
-            print('cube_node_extract_depth_uncertainty: no answer, no hypotheses found')
+            print("cube_node_extract_depth_uncertainty: no answer, no hypotheses found")
         return node.no_data_value, node.no_data_value, node.no_data_value
     elif node.hypotheses.next_data is None:  # only one hypothesis
         hypo = node.hypotheses.data
         depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, hypo)
         if Debug:
-            print('cube_node_extract_depth_uncertainty: getting the hypothesis answer, as only one was found')
+            print("cube_node_extract_depth_uncertainty: getting the hypothesis answer, as only one was found")
         return depth, uncertainty, ratio
     else:
         best_hypo, hypo_ratio = cube_node_choose_hypothesis(node)
         if best_hypo is None:
             if Debug:
-                print('cube_node_extract_depth_uncertainty: no answer, failed to gather best hypothesis')
+                print("cube_node_extract_depth_uncertainty: no answer, failed to gather best hypothesis")
             return node.no_data_value, node.no_data_value, node.no_data_value
         depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, best_hypo)
         ratio = hypo_ratio  # use the ratio determined during hypothesis choosing
         if Debug:
-            print('cube_node_extract_depth_uncertainty: getting the hypothesis answer, had to choose across multiple hypotheses')
+            print(
+                "cube_node_extract_depth_uncertainty: getting the hypothesis answer, had to choose across multiple hypotheses"
+            )
         return depth, uncertainty, ratio
 
 
@@ -1360,7 +1456,9 @@ def cube_node_extract_closest_depth_uncertainty(node: CubeNode, query_depth: num
 
     if (node.nominated is not None) or (node.hypotheses is None) or (node.hypotheses.next_data is None):
         if Debug:
-            print('cube_node_extract_closest_depth_uncertainty: one or zero hypotheses found, defaulting to basic selection')
+            print(
+                "cube_node_extract_closest_depth_uncertainty: one or zero hypotheses found, defaulting to basic selection"
+            )
         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
         return depth, uncertainty, ratio
     else:
@@ -1368,7 +1466,9 @@ def cube_node_extract_closest_depth_uncertainty(node: CubeNode, query_depth: num
         nearest_hypo = None
         total_points = 0
         for hyp in node.hypotheses.get_data():
-            if hyp.number_of_samples > 0:  # check that some data were used in making the hypothesis before accepting it as valid
+            if (
+                hyp.number_of_samples > 0
+            ):  # check that some data were used in making the hypothesis before accepting it as valid
                 error = abs((hyp.current_depth - numbaf32(query_depth)) / numbaf32(np.sqrt(query_variance)))
                 if min_error is None or error < min_error:
                     min_error = error
@@ -1376,12 +1476,18 @@ def cube_node_extract_closest_depth_uncertainty(node: CubeNode, query_depth: num
                 total_points += hyp.number_of_samples
         if nearest_hypo is None:  # should never get to this point
             if Debug:
-                print('cube_node_extract_closest_depth_uncertainty: no hypothesis found!')
+                print("cube_node_extract_closest_depth_uncertainty: no hypothesis found!")
             return node.no_data_value, node.no_data_value, node.no_data_value
         else:
             if Debug:
-                print('cube_node_extract_closest_depth_uncertainty: chose nearest hypothesis')
-            nearest_ratio = numbaf32(max(0.0, node.max_hypothesis_ratio - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples))))
+                print("cube_node_extract_closest_depth_uncertainty: chose nearest hypothesis")
+            nearest_ratio = numbaf32(
+                max(
+                    0.0,
+                    node.max_hypothesis_ratio
+                    - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
+                )
+            )
             depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
             ratio = nearest_ratio
             return depth, uncertainty, ratio
@@ -1414,7 +1520,9 @@ def cube_node_extract_posterior_depth_uncertainty(node: CubeNode, guide_depth: n
 
     if (node.nominated is not None) or (node.hypotheses is None) or (node.hypotheses.next_data is None):
         if Debug:
-            print('cube_node_extract_posterior_depth_uncertainty: one or zero hypotheses found, defaulting to basic selection')
+            print(
+                "cube_node_extract_posterior_depth_uncertainty: one or zero hypotheses found, defaulting to basic selection"
+            )
         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
         return depth, uncertainty, ratio
     else:
@@ -1422,21 +1530,31 @@ def cube_node_extract_posterior_depth_uncertainty(node: CubeNode, guide_depth: n
         nearest_hypo = None
         total_points = 0
         for hyp in node.hypotheses.get_data():
-            if hyp.number_of_samples > 0:  # check that some data were used in making the hypothesis before accepting it as valid
+            if (
+                hyp.number_of_samples > 0
+            ):  # check that some data were used in making the hypothesis before accepting it as valid
                 mean = hyp.current_depth
-                posterior = -numbaf32((guide_depth - mean) ** 2) / numbaf32(2.0 * guide_variance) + numbaf32(np.log(hyp.number_of_samples))
+                posterior = -numbaf32((guide_depth - mean) ** 2) / numbaf32(2.0 * guide_variance) + numbaf32(
+                    np.log(hyp.number_of_samples)
+                )
                 if max_posterior is None or posterior > max_posterior:
                     max_posterior = posterior
                     nearest_hypo = hyp
                 total_points += hyp.number_of_samples
         if nearest_hypo is None:  # should never get to this point
             if Debug:
-                print('cube_node_extract_posterior_depth_uncertainty: no hypothesis found!')
+                print("cube_node_extract_posterior_depth_uncertainty: no hypothesis found!")
             return node.no_data_value, node.no_data_value, node.no_data_value
         else:
             if Debug:
-                print('cube_node_extract_posterior_depth_uncertainty: chose nearest hypothesis')
-            nearest_ratio = numbaf32(max(0.0, node.max_hypothesis_ratio - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples))))
+                print("cube_node_extract_posterior_depth_uncertainty: chose nearest hypothesis")
+            nearest_ratio = numbaf32(
+                max(
+                    0.0,
+                    node.max_hypothesis_ratio
+                    - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
+                )
+            )
             depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
             ratio = nearest_ratio
             return depth, uncertainty, ratio
@@ -1465,8 +1583,14 @@ def cube_node_hypothesis_count(node: CubeNode):
 
 
 @njit
-def cube_grid_insert_points(cg: CubeGrid, depth: np.ndarray, horizontal_uncertainty: np.ndarray, vertical_uncertainty: np.ndarray,
-                            easting: np.ndarray, northing: np.ndarray):
+def cube_grid_insert_points(
+    cg: CubeGrid,
+    depth: np.ndarray,
+    horizontal_uncertainty: np.ndarray,
+    vertical_uncertainty: np.ndarray,
+    easting: np.ndarray,
+    northing: np.ndarray,
+):
     """
     Insert all provided points into the given CubeGrid
 
@@ -1489,7 +1613,7 @@ def cube_grid_insert_points(cg: CubeGrid, depth: np.ndarray, horizontal_uncertai
     conf_95_percent = 1.96
     conf_99_percent = 2.95
     for i in range(depth.shape[0]):
-        max_variance_allowed = (cg.iho_fixed + cg.iho_percent * depth[i] ** 2) / (conf_95_percent ** 2)
+        max_variance_allowed = (cg.iho_fixed + cg.iho_percent * depth[i] ** 2) / (conf_95_percent**2)
         ratio = max_variance_allowed / vertical_uncertainty[i]
         if ratio <= 2.0:
             ratio = 2.0
@@ -1511,7 +1635,7 @@ def cube_grid_insert_points(cg: CubeGrid, depth: np.ndarray, horizontal_uncertai
         # check that the sounding hits somewhere in the grid
         if max_x < 0 or min_x >= (cg.num_columns - 1) or max_y < 0 or min_y >= (cg.num_rows - 1):
             if Debug:
-                print('cube_grid_insert_points: Sounding out of bounds')
+                print("cube_grid_insert_points: Sounding out of bounds")
             continue  # out of bounds
         # clip to the interior of the current grid
         min_x = max(0, min_x)
@@ -1523,12 +1647,12 @@ def cube_grid_insert_points(cg: CubeGrid, depth: np.ndarray, horizontal_uncertai
                 node_x = cg.minimum_easting + (x * cg.resolution_x) + (cg.resolution_x / 2)
                 node_y = cg.maximum_northing - (y * cg.resolution_y) - (cg.resolution_y / 2)
                 distance_sq = (node_x - easting[i]) ** 2 + (node_y - northing[i]) ** 2
-                if distance_sq >= radius ** 2:
+                if distance_sq >= radius**2:
                     if Debug:
-                        print('cube_grid_insert_points: rejecting point as out of distance to node')
+                        print("cube_grid_insert_points: rejecting point as out of distance to node")
                     continue  # distance to great, not including this point in this node
                 if Debug:
-                    print('cube_grid_insert_points: adding point to node')
+                    print("cube_grid_insert_points: adding point to node")
                 snding = return_new_sounding(depth[i], 0.0, vertical_uncertainty[i], horizontal_uncertainty[i])
                 cube_node_insert(cg.grid[y][x], snding, distance_sq)
 
@@ -1575,7 +1699,7 @@ def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
         for col in range(cg.num_columns):
             node = cg.grid[row][col]
             hypcnt = cube_node_hypothesis_count(node)
-            if method == 'local' or method == 'posterior':
+            if method == "local" or method == "posterior":
                 if hypcnt <= 1:
                     depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
                 else:
@@ -1592,7 +1716,7 @@ def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
                                     if chk_node_hcount == 1:
                                         closest_node = cg.grid[target_row][target_col]
                                         if Debug:
-                                            print('cube_grid_extract_local: found closest node during row search')
+                                            print("cube_grid_extract_local: found closest node during row search")
                                         break
                             if closest_node is not None:
                                 break
@@ -1608,29 +1732,41 @@ def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
                                         if chk_node_hcount == 1:
                                             closest_node = cg.grid[target_row][target_col]
                                             if Debug:
-                                                print('cube_grid_extract_local: found closest node during column search')
+                                                print(
+                                                    "cube_grid_extract_local: found closest node during column search"
+                                                )
                                             break
                                 if closest_node is not None:
                                     break
                         if closest_node is not None:
                             break
-                    if closest_node is None:  # default to the basic node hypothesis selection, couldn't find a good hypothesis in the region
+                    if (
+                        closest_node is None
+                    ):  # default to the basic node hypothesis selection, couldn't find a good hypothesis in the region
                         if Debug:
-                            print("cube_grid_extract_local: default to the basic node hypothesis selection, couldn't find a good hypothesis in the region")
+                            print(
+                                "cube_grid_extract_local: default to the basic node hypothesis selection, couldn't find a good hypothesis in the region"
+                            )
                         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
                     else:
                         if Debug:
                             print("cube_grid_extract_local: extract value from closest node found")
                         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(closest_node)
                         if not np.isnan(depth) and not np.isnan(uncertainty):
-                            if method == 'local':
-                                depth, uncertainty, ratio = cube_node_extract_closest_depth_uncertainty(node, depth, uncertainty)
-                            elif method == 'posterior':
-                                depth, uncertainty, ratio = cube_node_extract_posterior_depth_uncertainty(node, depth, uncertainty)
-            elif method == 'prior':
+                            if method == "local":
+                                depth, uncertainty, ratio = cube_node_extract_closest_depth_uncertainty(
+                                    node, depth, uncertainty
+                                )
+                            elif method == "posterior":
+                                depth, uncertainty, ratio = cube_node_extract_posterior_depth_uncertainty(
+                                    node, depth, uncertainty
+                                )
+            elif method == "prior":
                 depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
-            elif method == 'predicted':
-                depth, uncertainty, ratio = cube_node_extract_closest_depth_uncertainty(node, node.predicted_depth, node.predicted_variance)
+            elif method == "predicted":
+                depth, uncertainty, ratio = cube_node_extract_closest_depth_uncertainty(
+                    node, node.predicted_depth, node.predicted_variance
+                )
 
             depth_grid[row][col] = depth
             uncertainty_grid[row][col] = uncertainty
@@ -1640,9 +1776,19 @@ def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
 
 
 @njit(nogil=True)
-def cube_grid_numba(depth: np.ndarray, horizontal_uncertainty: np.ndarray, vertical_uncertainty: np.ndarray,
-                    easting: np.ndarray, northing: np.ndarray, num_columns: numbai64, num_rows: numbai64,
-                    minimum_easting: numbaf64, maximum_northing: numbaf64, method: numbastr, params: CubeParameters):
+def cube_grid_numba(
+    depth: np.ndarray,
+    horizontal_uncertainty: np.ndarray,
+    vertical_uncertainty: np.ndarray,
+    easting: np.ndarray,
+    northing: np.ndarray,
+    num_columns: numbai64,
+    num_rows: numbai64,
+    minimum_easting: numbaf64,
+    maximum_northing: numbaf64,
+    method: numbastr,
+    params: CubeParameters,
+):
     """
     Helper function for assembling the grid and running extract_data in njit space
 
@@ -1688,17 +1834,36 @@ def cube_grid_numba(depth: np.ndarray, horizontal_uncertainty: np.ndarray, verti
         gridded hypothesis count values of shape (rows, columns) for the grid
     """
 
-    cg = return_new_cubegrid(minimum_easting, maximum_northing, num_columns, num_rows, params.grid_resolution_x,
-                             params.grid_resolution_y, params)
+    cg = return_new_cubegrid(
+        minimum_easting,
+        maximum_northing,
+        num_columns,
+        num_rows,
+        params.grid_resolution_x,
+        params.grid_resolution_y,
+        params,
+    )
     cube_grid_insert_points(cg, depth, horizontal_uncertainty, vertical_uncertainty, easting, northing)
     depth_grid, uncertainty_grid, ratio_grid, numhyp_grid = cube_grid_extract_data(cg, method)
     return depth_grid, uncertainty_grid, ratio_grid, numhyp_grid
 
 
-def run_cube_gridding(depth: np.ndarray, horizontal_uncertainty: np.ndarray, vertical_uncertainty: np.ndarray,
-                      easting: np.ndarray, northing: np.ndarray, num_columns: int, num_rows: int, minimum_easting: float,
-                      maximum_northing: float, method: str, iho_order: str, grid_resolution_x: float, grid_resolution_y: float,
-                      **kwargs):
+def run_cube_gridding(
+    depth: np.ndarray,
+    horizontal_uncertainty: np.ndarray,
+    vertical_uncertainty: np.ndarray,
+    easting: np.ndarray,
+    northing: np.ndarray,
+    num_columns: int,
+    num_rows: int,
+    minimum_easting: float,
+    maximum_northing: float,
+    method: str,
+    iho_order: str,
+    grid_resolution_x: float,
+    grid_resolution_y: float,
+    **kwargs,
+):
     """
     Entrance point in numba_cube, run this to run Cube.
 
@@ -1761,12 +1926,24 @@ def run_cube_gridding(depth: np.ndarray, horizontal_uncertainty: np.ndarray, ver
     for kpam, kval in kwargs.items():
         if kpam in cp.__dir__():
             setattr(cp, kpam, kval)
-    if method in ['local', 'posterior', 'prior', 'predicted']:
-        depth_grid, uncertainty_grid, ratio_grid, numhyp_grid = cube_grid_numba(depth, horizontal_uncertainty, vertical_uncertainty,
-                                                                                easting, northing, num_columns, num_rows,
-                                                                                minimum_easting, maximum_northing, method, cp)
+    if method in ["local", "posterior", "prior", "predicted"]:
+        depth_grid, uncertainty_grid, ratio_grid, numhyp_grid = cube_grid_numba(
+            depth,
+            horizontal_uncertainty,
+            vertical_uncertainty,
+            easting,
+            northing,
+            num_columns,
+            num_rows,
+            minimum_easting,
+            maximum_northing,
+            method,
+            cp,
+        )
     else:
-        raise NotImplementedError(f"run_cube_gridding: {method} not supported, expected one of 'local', 'posterior', 'prior', 'predicted'")
+        raise NotImplementedError(
+            f"run_cube_gridding: {method} not supported, expected one of 'local', 'posterior', 'prior', 'predicted'"
+        )
     return depth_grid, uncertainty_grid, ratio_grid, numhyp_grid
 
 
@@ -1784,16 +1961,16 @@ def compile_now():
     tvu = np.random.uniform(low=0.1, high=1.0, size=numpoints)
     thu = np.random.uniform(low=0.3, high=1.3, size=numpoints)
 
-    run_cube_gridding(z, thu, tvu, x, y, 32, 32, min(x), max(y), 'local', 'order1a', 1.0, 1.0)
+    run_cube_gridding(z, thu, tvu, x, y, 32, 32, min(x), max(y), "local", "order1a", 1.0, 1.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from time import perf_counter
 
     compile_now()
 
     starttime = perf_counter()
-    print('****Start****')
+    print("****Start****")
     _numpoints = 100000
     _x = np.random.uniform(low=403744.0, high=403776.0, size=_numpoints)
     _y = np.random.uniform(low=4122665.0, high=4122688.0, size=_numpoints)
@@ -1802,8 +1979,8 @@ if __name__ == '__main__':
     _thu = np.random.uniform(low=0.3, high=1.3, size=_numpoints)
     _numrows, _numcols = (32, 32)
     _resolution_x, _resolution_y = (1.0, 1.0)
-    _depth_grid, _uncertainty_grid, _ratio_grid, _numhyp_grid = run_cube_gridding(_z, _thu, _tvu, _x, _y, _numcols, _numrows,
-                                                                                  min(_x), max(_y), 'local', 'order1a',
-                                                                                  _resolution_x, _resolution_y)
+    _depth_grid, _uncertainty_grid, _ratio_grid, _numhyp_grid = run_cube_gridding(
+        _z, _thu, _tvu, _x, _y, _numcols, _numrows, min(_x), max(_y), "local", "order1a", _resolution_x, _resolution_y
+    )
     endtime = perf_counter()
-    print(f'****CUBE complete: {(endtime - starttime)}****')
+    print(f"****CUBE complete: {(endtime - starttime)}****")
