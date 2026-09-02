@@ -497,7 +497,7 @@ class CubeNode:
             hypo.seq_length = 1
         hypo.cum_bayes_fac = bayes_factor * min(1.0, hypo.cum_bayes_fac)
         # check for consecutive failure errors
-        # The runlength_t is W&H's limit on l_t (i.e., the number of consequtively bad Bayes factors which indicate that there has been a gradual shift away from the predictor)
+        # The runlength_t is W&H's limit on l_t (i.e., the number of consecutively bad Bayes factors which indicate that there has been a gradual shift away from the predictor)
         if (hypo.cum_bayes_fac < self.bayes_factor_threshold) or (hypo.seq_length > self.runlength_threshold):
             self.logger.log(logging.DEBUG, f'monitor_hypothesis: cum bayes fac {hypo.cum_bayes_fac} < {self.bayes_factor_threshold} or seq length {hypo.seq_length} > {self.runlength_threshold}, potential outlier')
             return False
@@ -696,7 +696,7 @@ class CubeNode:
         mean /= (num_points + 1)
         sum_square_diff_k = num_points * sum_square_diff / (num_points ** 2 - 1)
 
-        # run the list computing quotients, gather indicies for the outliers
+        # run the list computing quotients, gather indices for the outliers
         outlier_index = []
         for idx in range(len(self.queue)):
             depth = self.queue[idx][0]
