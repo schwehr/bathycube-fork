@@ -199,25 +199,25 @@ class CubeParameters:
         try:
             with open(param_file, 'w') as outfile:
                 json.dump(self.__dict__, outfile)
-                print('New CubeParameters file written to {}'.format(param_file))
+                print(f'New CubeParameters file written to {param_file}')
         except:
-            raise ValueError('CubeParameters: Unable to write new parameter file to {}'.format(param_file))
+            raise ValueError(f'CubeParameters: Unable to write new parameter file to {param_file}')
 
     def open_parameter_file(self, param_file: str):
         valid_data = False
-        with open(param_file, 'r') as infile:
+        with open(param_file) as infile:
             try:
                 data = json.load(infile)
             except:
-                raise ValueError('CubeParameters: Unable to read data from {} as json'.format(param_file))
+                raise ValueError(f'CubeParameters: Unable to read data from {param_file} as json')
             for ky, val in data.items():
                 if ky in self.__dict__:
                     self.__setattr__(ky, val)
                     valid_data = True
             if valid_data:
-                print('CubeParameters read successfully from {}'.format(param_file))
+                print(f'CubeParameters read successfully from {param_file}')
             else:
-                print('CubeParameters: Unable to find any valid data in {}'.format(param_file))
+                print(f'CubeParameters: Unable to find any valid data in {param_file}')
 
 
 class Hypothesis:
@@ -381,7 +381,7 @@ class CubeNode:
 
         hypo_idx = [self.hypotheses.index(h) for h in self.hypotheses if (abs(depth - h.current_depth) < self.depth_tolerance)]
         if len(hypo_idx) == 0:
-            self.logger.log(logging.WARNING, 'remove_hypothesis: unable to remove hypothesis at depth {}, no hypothesis found within {} meters'.format(depth, self.depth_tolerance))
+            self.logger.log(logging.WARNING, f'remove_hypothesis: unable to remove hypothesis at depth {depth}, no hypothesis found within {self.depth_tolerance} meters')
         elif len(hypo_idx) == 1:
             hypo_idx = hypo_idx[0]
             if self.nominated is not None and (self.nominated == self.hypotheses[hypo_idx]):
@@ -389,8 +389,8 @@ class CubeNode:
             self.hypotheses.pop(hypo_idx)
             self.logger.log(logging.DEBUG, f'remove_hypothesis: hypothesis number {hypo_idx} removed')
         else:
-            self.logger.log(logging.ERROR, 'remove_hypothesis: Found multiple hypothesis at depth {} +- {}, unable to remove a single hypothesis'.format(depth, self.depth_tolerance))
-            raise ValueError('remove_hypothesis: Found multiple hypothesis at depth {} +- {}, unable to remove a single hypothesis'.format(depth, self.depth_tolerance))
+            self.logger.log(logging.ERROR, f'remove_hypothesis: Found multiple hypothesis at depth {depth} +- {self.depth_tolerance}, unable to remove a single hypothesis')
+            raise ValueError(f'remove_hypothesis: Found multiple hypothesis at depth {depth} +- {self.depth_tolerance}, unable to remove a single hypothesis')
 
     def nominate_hypothesis(self, depth: float):
         """
@@ -422,7 +422,7 @@ class CubeNode:
                     self.logger.log(logging.DEBUG, f'nominate_hypothesis: selecting hypothesis at depth {depth}')
         self.nominated = curr_hypo
         if self.nominated is None:
-            self.logger.log(logging.WARNING, 'nominate_hypothesis: Warning, no hypothesis found to nominate at depth {} +- {}'.format(depth, self.depth_tolerance))
+            self.logger.log(logging.WARNING, f'nominate_hypothesis: Warning, no hypothesis found to nominate at depth {depth} +- {self.depth_tolerance}')
 
     def clear_nomination(self):
         """

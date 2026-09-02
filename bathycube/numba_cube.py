@@ -1806,4 +1806,4 @@ if __name__ == '__main__':
                                                                                   min(_x), max(_y), 'local', 'order1a',
                                                                                   _resolution_x, _resolution_y)
     endtime = perf_counter()
-    print('****CUBE complete: {}****'.format((endtime - starttime)))
+    print(f'****CUBE complete: {(endtime - starttime)}****')
