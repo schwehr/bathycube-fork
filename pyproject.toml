@@ -36,6 +36,7 @@ exclude = ["tests*"]
 [dependency-groups]
 dev = [
     "pre-commit",
+    "pylint>=4.0.8",
     "pytest",
     "pytest-cov",
     "ruff>=0.16.5",
@@ -83,6 +84,60 @@ testpaths = ["tests"]
 [tool.coverage.run]
 source = ["bathycube"]
 branch = true
+
+[tool.pylint.main]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = [
+    "arguments-renamed",
+    "cell-var-from-loop",
+    "consider-using-enumerate",
+    "consider-using-f-string",
+    "consider-using-in",
+    "consider-using-max-builtin",
+    "duplicate-code",
+    "exec-used",
+    "f-string-without-interpolation",
+    "fixme",
+    "import-error",
+    "import-outside-toplevel",
+    "inconsistent-return-statements",
+    "invalid-name",
+    "line-too-long",
+    "logging-fstring-interpolation",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "multiple-imports",
+    "no-else-return",
+    "no-member",
+    "protected-access",
+    "raise-missing-from",
+    "redefined-outer-name",
+    "reimported",
+    "simplifiable-if-statement",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-nested-blocks",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-statements",
+    "unbalanced-tuple-unpacking",
+    "unnecessary-dunder-call",
+    "unspecified-encoding",
+    "unused-argument",
+    "unused-import",
+    "unused-variable",
+    "unused-wildcard-import",
+    "use-implicit-booleaness-not-comparison",
+    "wildcard-import",
+    "wrong-import-order",
+]
 
 [tool.coverage.report]
 show_missing = true
