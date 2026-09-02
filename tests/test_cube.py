@@ -469,3 +469,261 @@ def test_cube_node_hypothesis_count():
     cb.add_point_to_node(17.8, 0.5, 0.5, 0.25)
     cb.flush_queue()
     assert cb.return_number_of_hypotheses() == 2
+
+
+def test_get_iho_limits_all_orders():
+    assert get_iho_limits('exclusive') == (0.15, 0.0075)
+    assert get_iho_limits('special') == (0.25, 0.0075)
+    assert get_iho_limits('order1a') == (0.5, 0.013)
+    assert get_iho_limits('order1b') == (0.5, 0.013)
+    assert get_iho_limits('order2') == (1.0, 0.023)
+
+
+def test_cube_parameters_io(tmp_path):
+    import pytest
+    param = CubeParameters()
+    param.initialize('order1a', 1.0, 1.0)
+    param.no_data_value = float(np.nan)
+    filepath = str(tmp_path / "params.json")
+    param.write_parameter_file(filepath)
+
+    param2 = CubeParameters()
+    param2.open_parameter_file(filepath)
+    assert param2.grid_resolution_x == 1.0
+    assert param2.grid_resolution_y == 1.0
+
+
+    # Test error handling on write
+    with pytest.raises(ValueError):
+        param.write_parameter_file("/nonexistent_directory/params.json")
+
+    # Test error handling on read invalid json
+    bad_json = str(tmp_path / "bad.json")
+    with open(bad_json, "w") as f:
+        f.write("invalid json content")
+    with pytest.raises(ValueError):
+        param2.open_parameter_file(bad_json)
+
+    # Test read json with no matching keys
+    empty_json = str(tmp_path / "empty.json")
+    with open(empty_json, "w") as f:
+        f.write(json.dumps({"unknown_key": 123}))
+    param2.open_parameter_file(empty_json)
+
+
+def test_cube_node_additional_branches():
+    import pytest
+    cb = CubeNode()
+    # Null hypothesis
+    cb.add_hypothesis(10.0, 0.5, null_hypothesis=True)
+    assert cb.hypotheses[0].number_of_points == 0
+    # dump hypotheses
+    cb.dump_hypotheses()
+
+    # Extract answer from null hypothesis
+    ans = cb._return_answer_from_hypothesis(cb.hypotheses[0], 1.0, ('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    assert np.isnan(ans[0])
+    assert np.isnan(ans[1])
+
+    # Multiple matching hypotheses on remove raises ValueError
+    cb2 = CubeNode()
+    cb2.add_hypothesis(10.0, 0.5)
+    cb2.add_hypothesis(10.005, 0.5)
+    with pytest.raises(ValueError):
+        cb2.remove_hypothesis(10.002)
+
+    # Nominate hypothesis and then remove it
+    cb3 = CubeNode()
+    cb3.add_hypothesis(10.0, 0.5)
+    cb3.nominate_hypothesis(10.0)
+    assert cb3.nominated is not None
+    cb3.remove_hypothesis(10.0)
+    assert cb3.nominated is None
+
+    # Nominate hypothesis with multiple candidates picking the closest
+    cb4 = CubeNode()
+    cb4.add_hypothesis(10.002, 0.5)
+    cb4.add_hypothesis(10.006, 0.5)
+    cb4.nominate_hypothesis(10.007)
+    assert cb4.nominated.current_depth == 10.006
+
+    # Return nominated answer with all value ids
+    nom_ans = cb4._return_nominated_answer(('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    assert nom_ans[0] == 10.006
+    assert nom_ans[2] == 0.0
+    assert nom_ans[3] == 2
+
+    # Variance selection options ('max', 'input')
+    cb5 = CubeNode()
+    cb5.variance_selection = 'max'
+    cb5.add_hypothesis(10.0, 0.5)
+    cb5.hypotheses[0].variance_estimate = 1.0
+    ans_max = cb5.extract_node_value(('depth', 'uncertainty', 'ratio', 'n_hypotheses'))
+    assert ans_max[0] == 10.0
+
+    cb5.variance_selection = 'input'
+    ans_input = cb5.extract_node_value(('depth', 'uncertainty'))
+    assert ans_input[0] == 10.0
+
+    # return_depth and return_uncertainty
+    assert cb5.return_depth() == 10.0
+    assert ans_input[1] == cb5.return_uncertainty()
+
+    # Choose hypothesis with second highest count branch
+    cb6 = CubeNode()
+    h1 = Hypothesis(10.0, 0.5)
+    h1.number_of_points = 5
+    h2 = Hypothesis(15.0, 0.5)
+    h2.number_of_points = 3
+    h3 = Hypothesis(20.0, 0.5)
+    h3.number_of_points = 4
+    cb6.hypotheses = [h1, h2, h3]
+    best_h, ratio = cb6.choose_hypothesis()
+    assert best_h == h1
+
+    # Queue methods with use_queue = False or empty queue flush
+    cb_no_q = CubeNode(use_queue=False)
+    cb_no_q.queue_fill(10.0, 0.5)
+    d, v = cb_no_q.queue_insert(10.0, 0.5)
+    assert d == 10.0 and v == 0.5
+    cb_no_q.flush_queue()
+
+    cb_empty = CubeNode()
+    cb_empty.flush_queue()
+
+
+def test_cube_node_point_filtering():
+    # Sounding rejected with NaN predicted depth
+    cb = CubeNode()
+    cb.predicted_depth = np.nan
+    cb.add_point_to_node(10.0, 0.5, 0.5, 0.25)
+    assert len(cb.queue) == 0
+
+    # Sounding rejected as blunder
+    cb2 = CubeNode()
+    cb2.predicted_depth = 20.0
+    cb2.predicted_variance = 0.5
+    cb2.blunder_min = 5.0
+    cb2.blunder_percent = 0.25
+    cb2.add_point_to_node(2.0, 0.5, 0.5, 0.25)
+    assert len(cb2.queue) == 0
+
+    # Sounding rejected due to capture distance
+    cb3 = CubeNode()
+    cb3.predicted_depth = 1.0
+    cb3.capture_dist_scale = 0.01
+    # dist is sqrt(100) = 10m, max capture distance is max(0.01 * 1, 0.5) = 0.5m
+    cb3.add_point_to_node(1.0, 0.5, 0.5, 100.0)
+    assert len(cb3.queue) == 0
+
+
+def test_cube_grid_and_gridding(tmp_path):
+    import pytest
+    param = CubeParameters()
+    param.initialize('order1a', 1.0, 1.0)
+    logfile = str(tmp_path / "test_cube.log")
+    grid = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=4, num_rows=4,
+                    resolution_x=1.0, resolution_y=1.0, param=param, use_queue=True,
+                    logfile=logfile, debug=True)
+
+    assert grid.total_nodes_count == 16
+    assert grid.empty_nodes_count == 16
+    assert grid.populated_nodes_count == 0
+
+    # Validate insert points with scalar, list, and mismatched arrays
+    d, h, v, e, n = grid._validate_insert_points(10.0, 0.5, 0.5, 101.5, 198.5)
+    assert isinstance(d, np.ndarray) and len(d) == 1
+
+    d, h, v, e, n = grid._validate_insert_points([10.0, 11.0], [0.5, 0.5], [0.5, 0.5], [101.5, 102.5], [198.5, 197.5])
+    assert len(d) == 2
+
+    with pytest.raises(AssertionError):
+        grid._validate_insert_points([10.0], [0.5, 0.5], [0.5], [101.5], [198.5])
+
+    # Insert points including out of bounds soundings
+    depths = np.array([10.0, 15.0, 10.0])
+    thu = np.array([0.5, 0.5, 0.5])
+    tvu = np.array([0.5, 0.5, 0.5])
+    eastings = np.array([101.5, 500.0, 102.5])  # 500.0 is out of bounds
+    northings = np.array([198.5, 500.0, 197.5])
+
+    grid.insert_points(depths, thu, tvu, eastings, northings)
+    grid.flush_node_queues()
+
+    assert grid.populated_nodes_count > 0
+
+    # Test all grid extraction methods
+    for method in ['local', 'posterior', 'prior', 'predicted']:
+        depth_grid = grid.get_grid_depth(method=method)
+        unc_grid = grid.get_grid_uncertainty(method=method)
+        ratio_grid = grid.get_grid_ratio(method=method)
+        d_and_u = grid.get_grid_depth_and_uncertainty(method=method)
+        assert depth_grid.shape == (4, 4)
+        assert unc_grid.shape == (4, 4)
+        assert ratio_grid.shape == (4, 4)
+        assert len(d_and_u) == 2
+
+    hyp_count_grid = grid.get_grid_number_hypotheses()
+    assert hyp_count_grid.shape == (4, 4)
+
+    # Test run_cube_gridding with valid methods and custom kwargs
+    for method in ['local', 'posterior', 'prior', 'predicted']:
+        dg, ug, rg, ng = run_cube_gridding(
+            depth=np.array([10.0, 10.5]),
+            horizontal_uncertainty=np.array([0.5, 0.5]),
+            vertical_uncertainty=np.array([0.5, 0.5]),
+            easting=np.array([101.5, 101.5]),
+            northing=np.array([198.5, 198.5]),
+            num_columns=4,
+            num_rows=4,
+            minimum_easting=100.0,
+            maximum_northing=200.0,
+            method=method,
+            iho_order='order1a',
+            grid_resolution_x=1.0,
+            grid_resolution_y=1.0,
+            dist_exponent=2.0
+        )
+        assert dg.shape == (4, 4)
+
+    # Test run_cube_gridding invalid method
+    with pytest.raises(NotImplementedError):
+        run_cube_gridding(
+            depth=np.array([10.0]),
+            horizontal_uncertainty=np.array([0.5]),
+            vertical_uncertainty=np.array([0.5]),
+            easting=np.array([101.5]),
+            northing=np.array([198.5]),
+            num_columns=4,
+            num_rows=4,
+            minimum_easting=100.0,
+            maximum_northing=200.0,
+            method='invalid_method',
+            iho_order='order1a',
+            grid_resolution_x=1.0,
+            grid_resolution_y=1.0
+        )
+
+
+def test_cube_grid_multihypothesis_spatial_search():
+    param = CubeParameters()
+    param.initialize('order1a', 1.0, 1.0)
+    grid = CubeGrid(minimum_easting=100.0, maximum_northing=200.0, num_columns=5, num_rows=5,
+                    resolution_x=1.0, resolution_y=1.0, param=param, use_queue=False)
+
+    # Set up node (2, 2) with 2 hypotheses
+    node_multi = grid.grid[2][2]
+    node_multi.add_hypothesis(10.0, 0.5)
+    node_multi.add_hypothesis(20.0, 0.5)
+
+    # Set up node (2, 3) with 1 hypothesis (found during row search)
+    node_single = grid.grid[2][3]
+    node_single.add_hypothesis(10.2, 0.5)
+
+    # Extract with 'local' and 'posterior'
+    vals_local = grid.get_grid_values(('depth', 'uncertainty'), method='local')
+    assert not np.isnan(vals_local[0][2, 2])
+
+    vals_posterior = grid.get_grid_values(('depth', 'uncertainty'), method='posterior')
+    assert not np.isnan(vals_posterior[0][2, 2])
+
