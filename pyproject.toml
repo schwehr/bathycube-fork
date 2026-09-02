@@ -36,10 +36,20 @@ exclude = ["tests*"]
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-cov",
 ]
 
 [[tool.uv.index]]
 url = "https://pypi.org/simple"
 default = true
 
+[tool.pytest.ini_options]
+addopts = "--cov=bathycube --cov-report=term-missing"
+testpaths = ["tests"]
 
+[tool.coverage.run]
+source = ["bathycube"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true

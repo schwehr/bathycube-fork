@@ -1,6 +1,8 @@
 *.pyc
 *.ini
 *.lock
+.coverage*
+
 
 # dask stuff
 *.dirlock
