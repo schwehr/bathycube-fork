@@ -1014,5 +1014,3 @@ def test_run_cube_gridding_extra_kwargs_and_main():
     # Test running __main__ block
     import bathycube.cube
     runpy.run_path(bathycube.cube.__file__, run_name='__main__')
-
-

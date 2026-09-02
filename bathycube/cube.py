@@ -53,7 +53,7 @@ def return_logger(logfile: str = None, loglevel=logging.INFO):
     logger: logging.Logger instance for the provided name/logfile
 
     """
-    
+
     fmat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logger = logging.getLogger('cube')
     logger.setLevel(loglevel)

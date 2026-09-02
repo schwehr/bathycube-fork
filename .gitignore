@@ -2,6 +2,7 @@
 *.ini
 *.lock
 .coverage*
+*.egg-info
 
 
 # dask stuff

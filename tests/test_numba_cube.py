@@ -14,7 +14,7 @@ def test_hypothesislist():
     badindex = ll.get_nearest_in_depth(95.7, 10.0)
     ll.remove(badindex)
     ll = ll.drop_first()
-    
+
     data = [d.current_depth for d in ll.get_data()]
     assert data == [4.0, 5.0, 6.0, 7.0, 8.0]
     assert ll.get_item(0).current_depth == 4.0
@@ -986,8 +986,3 @@ def test_numba_cube_py_funcs_coverage():
     d = dict(nc.__dict__)
     d['__name__'] = '__main__'
     exec(code, d)
-
-
-
-
-
