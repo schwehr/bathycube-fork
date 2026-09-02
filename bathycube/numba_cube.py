@@ -919,8 +919,9 @@ def cube_node_truncate(node: CubeNode):
     mean /= (num_points + 1)
     sum_square_diff_k = num_points * sum_square_diff / (num_points ** 2 - 1)
 
-    outlier_index = np.zeros((num_points,), dtype=numbai32)
+    outlier_index = np.zeros((num_points,), dtype=np.int32)
     outliers = 0
+
     for cnt, nsounding in enumerate(queue_data):
         diff_sq = (nsounding.depth - mean) ** 2
         quot = diff_sq / (sum_square_diff_k - (diff_sq / (num_points - 1)))
