@@ -527,9 +527,9 @@ class CubeGrid:
         self.iho_percent = params.iho_percent
 
         grid = typed.List()
-        for row in range(self.num_rows):
+        for _ in range(self.num_rows):
             grid_row = typed.List()
-            for column in range(self.num_columns):
+            for _ in range(self.num_columns):
                 newnode = return_new_cubenode()
                 newnode.bayes_factor_threshold = params.bayes_factor_threshold
                 newnode.est_offset = params.est_offset

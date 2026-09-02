@@ -746,7 +746,7 @@ class CubeNode:
         mean = 0.0
         sum_square_diff = 0.0
         num_points = self.n_queued - 1  # number of points + 1 outlier
-        for depth, variance in self.queue:
+        for depth, _ in self.queue:
             mean += depth
             sum_square_diff += depth**2
         sum_square_diff -= (mean**2) / (num_points + 1)
@@ -1378,9 +1378,9 @@ class CubeGrid:
         self.debug = debug
 
         self.grid = []
-        for row in range(self.num_rows):
+        for _ in range(self.num_rows):
             rdata = []
-            for column in range(self.num_columns):
+            for _ in range(self.num_columns):
                 rdata.append(
                     CubeNode(
                         bayes_factor_threshold=param.bayes_factor_threshold,

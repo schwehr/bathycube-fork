@@ -583,7 +583,7 @@ def test_cube_node_additional_branches():
     h3 = Hypothesis(20.0, 0.5)
     h3.number_of_points = 4
     cb6.hypotheses = [h1, h2, h3]
-    best_h, ratio = cb6.choose_hypothesis()
+    best_h, _ = cb6.choose_hypothesis()
     assert best_h == h1
 
     # Queue methods with use_queue = False or empty queue flush
@@ -646,10 +646,10 @@ def test_cube_grid_and_gridding(tmp_path):
     assert grid.populated_nodes_count == 0
 
     # Validate insert points with scalar, list, and mismatched arrays
-    d, h, v, e, n = grid._validate_insert_points(10.0, 0.5, 0.5, 101.5, 198.5)
+    d, _, _, _, _ = grid._validate_insert_points(10.0, 0.5, 0.5, 101.5, 198.5)
     assert isinstance(d, np.ndarray) and len(d) == 1
 
-    d, h, v, e, n = grid._validate_insert_points([10.0, 11.0], [0.5, 0.5], [0.5, 0.5], [101.5, 102.5], [198.5, 197.5])
+    d, _, _, _, _ = grid._validate_insert_points([10.0, 11.0], [0.5, 0.5], [0.5, 0.5], [101.5, 102.5], [198.5, 197.5])
     assert len(d) == 2
 
     with pytest.raises(AssertionError):
@@ -683,7 +683,7 @@ def test_cube_grid_and_gridding(tmp_path):
 
     # Test run_cube_gridding with valid methods and custom kwargs
     for method in ["local", "posterior", "prior", "predicted"]:
-        dg, ug, rg, ng = run_cube_gridding(
+        dg, _, _, _ = run_cube_gridding(
             depth=np.array([10.0, 10.5]),
             horizontal_uncertainty=np.array([0.5, 0.5]),
             vertical_uncertainty=np.array([0.5, 0.5]),
@@ -835,7 +835,7 @@ def test_cube_node_choose_hypothesis_branches():
     hc = Hypothesis(8.0, 0.5)
     hc.number_of_points = 2
     cb2.hypotheses = [ha, hb, hc]
-    best2, ratio2 = cb2.choose_hypothesis()
+    best2, _ = cb2.choose_hypothesis()
     assert best2.current_depth == 6.0
 
     # Test single positive hypothesis
@@ -1050,7 +1050,7 @@ def test_run_cube_gridding_extra_kwargs_and_main():
     import runpy
 
     # Test extra kwargs not in CubeParameters
-    dg, ug, rg, ng = run_cube_gridding(
+    dg, _, _, _ = run_cube_gridding(
         depth=np.array([10.0]),
         horizontal_uncertainty=np.array([0.5]),
         vertical_uncertainty=np.array([0.5]),

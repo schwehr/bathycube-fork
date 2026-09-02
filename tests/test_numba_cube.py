@@ -522,7 +522,6 @@ def test_compile_now():
 def test_run_cube_gridding_variants():
     import pytest
 
-    numpoints = 5
     x = np.array([101.0, 102.0, 103.0, 101.5, 102.5])
     y = np.array([199.0, 198.0, 197.0, 198.5, 197.5])
     z = np.array([10.0, 11.0, 10.5, 10.2, 10.8])
@@ -530,7 +529,7 @@ def test_run_cube_gridding_variants():
     thu = np.array([0.5, 0.5, 0.5, 0.5, 0.5])
 
     for method in ["local", "posterior", "prior", "predicted"]:
-        d, u, r, n = run_cube_gridding(
+        d, _, _, _ = run_cube_gridding(
             z, thu, tvu, x, y, 4, 4, 100.0, 200.0, method, "order1a", 1.0, 1.0, dist_exponent=2.0
         )
         assert d.shape == (4, 4)
@@ -577,16 +576,16 @@ def test_numba_cube_py_funcs_coverage():
     hl_methods["remove"](hl2, 1)
     hl_methods["remove"](hl2, 0)
     hl_methods["remove"](hl2, 999)
-    hl_dropped = hl_methods["drop_first"](hl2)
-    data = hl_methods["get_data"](hl2)
-    item = hl_methods["get_item"](hl2, 0)
-    item_mid = hl_methods["get_item"](hl2, 1)
-    item_none = hl_methods["get_item"](hl2, 999)
-    nearest_idx = hl_methods["get_nearest_in_depth"](hl2, 8.0, 0.5)
-    nearest_idx2 = hl_methods["get_nearest_in_depth"](hl2, 12.0, 0.5)
-    nearest_idx_none = hl_methods["get_nearest_in_depth"](hl2, 500.0, 0.5)
-    min_err_idx = hl_methods["get_nearest_min_error"](hl2, 10.0, 0.5)
-    max_s_idx, curmax, secmax = hl_methods["get_max_sample"](hl2)
+    hl_methods["drop_first"](hl2)
+    hl_methods["get_data"](hl2)
+    hl_methods["get_item"](hl2, 0)
+    hl_methods["get_item"](hl2, 1)
+    hl_methods["get_item"](hl2, 999)
+    hl_methods["get_nearest_in_depth"](hl2, 8.0, 0.5)
+    hl_methods["get_nearest_in_depth"](hl2, 12.0, 0.5)
+    hl_methods["get_nearest_in_depth"](hl2, 500.0, 0.5)
+    hl_methods["get_nearest_min_error"](hl2, 10.0, 0.5)
+    hl_methods["get_max_sample"](hl2)
 
     # HypothesisList get_max_sample coverage for branch 281->283 and line 282
     h0 = return_new_hypothesis.py_func(np.float32(1.0), np.float32(0.5))
@@ -630,11 +629,11 @@ def test_numba_cube_py_funcs_coverage():
     ql_methods["remove"](ql2, 1)
     ql_methods["remove"](ql2, 0)
     ql_methods["remove"](ql2, 999)
-    ql_dropped = ql_methods["drop_first"](ql2)
-    qdata = ql_methods["get_data"](ql2)
-    qitem = ql_methods["get_item"](ql2, 0)
-    qitem_mid = ql_methods["get_item"](ql2, 1)
-    qitem_none = ql_methods["get_item"](ql2, 999)
+    ql_methods["drop_first"](ql2)
+    ql_methods["get_data"](ql2)
+    ql_methods["get_item"](ql2, 0)
+    ql_methods["get_item"](ql2, 1)
+    ql_methods["get_item"](ql2, 999)
 
     # 7. CubeNode py_func and constructor
     node = return_new_cubenode.py_func()
@@ -660,7 +659,7 @@ def test_numba_cube_py_funcs_coverage():
         # nomination py_funcs
         assert cube_node_nominate_hypothesis.py_func(n_op, np.float32(10.0))
         assert cube_node_is_nominated.py_func(n_op)
-        d, u, r = cube_node_get_nominated_depth_uncertainty.py_func(n_op)
+        d, _, _ = cube_node_get_nominated_depth_uncertainty.py_func(n_op)
         assert d == approx(10.0, abs=0.01)
         assert cube_node_reset_nomination.py_func(n_op)
         assert not cube_node_is_nominated.py_func(n_op)
@@ -795,7 +794,7 @@ def test_numba_cube_py_funcs_coverage():
         )
 
         # choose hypothesis
-        h_none, r_none = cube_node_choose_hypothesis.py_func(return_new_cubenode.py_func())
+        h_none, _ = cube_node_choose_hypothesis.py_func(return_new_cubenode.py_func())
         assert h_none is None
         # choose hypothesis on node with multiple hypotheses (second_highest_count != 0)
         cube_node_choose_hypothesis.py_func(n_upd_node)
