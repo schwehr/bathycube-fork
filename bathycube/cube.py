@@ -871,7 +871,7 @@ class CubeNode:
         else:
             self.update_node(depth, variance)
 
-    def add_point_to_node(self, depth: float, vertical_uncertainty: float, horizontal_uncertainty: float, distance_to_node: float):
+    def add_point_to_node(self, depth: float, vertical_uncertainty: float, horizontal_uncertainty: float, distance_to_node: float, sounding_range: float = 0.0):
         """
         Insert a point into the node.  This will compute the variance scale factor for the new data, and send the data
         into the estimation queue.
@@ -886,6 +886,8 @@ class CubeNode:
             new horizontal uncertainty value associated with the point, assumes 2 sigma
         distance_to_node
             distance from point to node
+        sounding_range
+            optional range value associated with the sounding
         """
 
         conf_95_percent = 1.96
@@ -915,7 +917,6 @@ class CubeNode:
         # add horizontal positioning uncertainty, assumes 2sigma
         dist += conf_95_percent * np.sqrt(horizontal_uncertainty)
         # TODO this asked for range (range != 0) in the original source, don't have range
-        sounding_range = 0.0
         if sounding_range != 0.0 and (not np.isnan(self.predicted_depth) and self.predicted_depth):
             offset = self.predicted_depth - depth
             self.logger.log(logging.DEBUG, f'add_point_to_node: adding offset to depth')
@@ -1464,11 +1465,11 @@ class CubeGrid:
                             closest_data = closest_node.extract_node_value(('depth', 'uncertainty'))
                             if method == 'local':
                                 node_data = node.extract_closest_node_value(closest_data[0], closest_data[1], value)
-                            elif method == 'posterior':
+                            else:
                                 node_data = node.extract_posterior_weighted_node_value(closest_data[0], closest_data[1], value)
                 elif method == 'prior':
                     node_data = node.extract_node_value(value)
-                elif method == 'predicted':
+                else:  # predicted
                     node_data = node.extract_closest_node_value(node.predicted_depth, node.predicted_variance, value)
                 for cnt, node_value in enumerate(node_data):
                     data[cnt][row, col] = node_value
@@ -1670,23 +1671,23 @@ def run_cube_gridding(depth: np.ndarray, horizontal_uncertainty: np.ndarray, ver
     return depth_grid, uncertainty_grid, ratio_grid, numhyp_grid
 
 
-if __name__ == '__main__':
-    from time import perf_counter
-    starttime = perf_counter()
+# if __name__ == '__main__':
+#     from time import perf_counter
+#     starttime = perf_counter()
 
-    print('****Start****')
-    _numpoints = 100000
-    _x = np.random.uniform(low=403744.0, high=403776.0, size=_numpoints)
-    _y = np.random.uniform(low=4122665.0, high=4122688.0, size=_numpoints)
-    _z = np.random.uniform(low=13.0, high=15.0, size=_numpoints)
-    _tvu = np.random.uniform(low=0.1, high=1.0, size=_numpoints)
-    _thu = np.random.uniform(low=0.3, high=1.3, size=_numpoints)
-    _numrows, _numcols = (32, 32)
-    _resolution_x, _resolution_y = (1.0, 1.0)
-    _depth_grid, _uncertainty_grid, _ratio_grid, _numhyp_grid = run_cube_gridding(_z, _thu, _tvu, _x, _y, _numcols,
-                                                                                  _numrows,
-                                                                                  min(_x), max(_y), 'local', 'order1a',
-                                                                                  _resolution_x, _resolution_y)
+#     print('****Start****')
+#     _numpoints = 100000
+#     _x = np.random.uniform(low=403744.0, high=403776.0, size=_numpoints)
+#     _y = np.random.uniform(low=4122665.0, high=4122688.0, size=_numpoints)
+#     _z = np.random.uniform(low=13.0, high=15.0, size=_numpoints)
+#     _tvu = np.random.uniform(low=0.1, high=1.0, size=_numpoints)
+#     _thu = np.random.uniform(low=0.3, high=1.3, size=_numpoints)
+#     _numrows, _numcols = (32, 32)
+#     _resolution_x, _resolution_y = (1.0, 1.0)
+#     _depth_grid, _uncertainty_grid, _ratio_grid, _numhyp_grid = run_cube_gridding(_z, _thu, _tvu, _x, _y, _numcols,
+#                                                                                   _numrows,
+#                                                                                   min(_x), max(_y), 'local', 'order1a',
+#                                                                                   _resolution_x, _resolution_y)
 
-    endtime = perf_counter()
-    print('****CUBE complete: {}****'.format((endtime - starttime)))
+#     endtime = perf_counter()
+#     print('****CUBE complete: {}****'.format((endtime - starttime)))
