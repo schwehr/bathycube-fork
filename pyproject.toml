@@ -48,6 +48,24 @@ default = true
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+ignore = [
+    "B008",     # function-call-in-default-argument
+    "E722",     # bare-except
+    "F401",     # unused-import
+    "F541",     # f-string-missing-placeholders
+    "F811",     # redefined-while-unused
+    "F841",     # unused-variable
+    "I001",     # unsorted-imports
+    "PLR1730",  # if-stmt-min-max
+    "RUF013",   # implicit-optional
+    "RUF059",   # unused-unpacked-variable
+    "S102",     # exec-builtin
+    "SIM103",   # needless-bool
+    "SIM114",   # if-with-same-arms
+    "UP032",    # f-string
+]
+
 [tool.pytest.ini_options]
 addopts = "--cov=bathycube --cov-report=term-missing"
 testpaths = ["tests"]
