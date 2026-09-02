@@ -39,6 +39,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff>=0.16.5",
+    "ty>=0.0.77",
 ]
 
 [[tool.uv.index]]
@@ -65,6 +66,15 @@ ignore = [
     "SIM114",   # if-with-same-arms
     "UP032",    # f-string
 ]
+
+[tool.ty.rules]
+invalid-argument-type = "ignore"
+invalid-assignment = "ignore"
+invalid-method-override = "ignore"
+invalid-parameter-default = "ignore"
+invalid-type-form = "ignore"
+too-many-positional-arguments = "ignore"
+unresolved-attribute = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--cov=bathycube --cov-report=term-missing"
