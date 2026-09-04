@@ -104,7 +104,6 @@ disable = [
     "missing-class-docstring",
     "missing-function-docstring",
     "missing-module-docstring",
-    "multiple-imports",
     "no-else-return",
     "no-member",
     "protected-access",
