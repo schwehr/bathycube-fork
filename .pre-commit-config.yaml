@@ -19,6 +19,15 @@ repos:
     hooks:
       - id: ty
 
+  - repo: https://github.com/facebook/pyrefly-pre-commit
+    rev: 1.2.0
+    hooks:
+      - id: pyrefly-check
+        additional_dependencies:
+          - "numba>=0.52.0"
+          - "numpy>=1.20.1"
+          - "pytest"
+
   - repo: https://github.com/pylint-dev/pylint
     rev: v4.0.8
     hooks:
