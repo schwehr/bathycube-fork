@@ -126,9 +126,7 @@ disable = [
     "unnecessary-dunder-call",
     "unspecified-encoding",
     "unused-argument",
-    "unused-wildcard-import",
     "use-implicit-booleaness-not-comparison",
-    "wildcard-import",
 ]
 
 [tool.coverage.report]
