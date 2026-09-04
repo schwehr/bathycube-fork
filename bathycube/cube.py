@@ -83,7 +83,7 @@ def return_logger(logfile: str = None, loglevel=logging.INFO):
     return logger
 
 
-def get_iho_limits(iho_order: str):
+def get_iho_limits(iho_order: str) -> tuple[float, float]:
     """
     Get fixed and variable Total Vertical Uncertainty components for the different IHO Order categories, see S-44
     Table 1 - Minimum Bathymetry Standards for Safety of Navigation Hydrographic Surveys
@@ -110,6 +110,7 @@ def get_iho_limits(iho_order: str):
         return 0.5, 0.013
     elif iho_order == "order2":
         return 1.0, 0.023
+    raise ValueError(f"Unknown IHO order: {iho_order}")
 
 
 class CubeParameters:

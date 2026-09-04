@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pytest
 from pytest import approx
 
 from bathycube import cube
@@ -487,8 +488,6 @@ def test_get_iho_limits_all_orders():
 
 
 def test_cube_parameters_io(tmp_path):
-    import pytest
-
     param = cube.CubeParameters()
     param.initialize("order1a", 1.0, 1.0)
     param.no_data_value = float(np.nan)
@@ -519,8 +518,6 @@ def test_cube_parameters_io(tmp_path):
 
 
 def test_cube_node_additional_branches():
-    import pytest
-
     cb = cube.CubeNode()
     # Null hypothesis
     cb.add_hypothesis(10.0, 0.5, null_hypothesis=True)
@@ -626,8 +623,6 @@ def test_cube_node_point_filtering():
 
 
 def test_cube_grid_and_gridding(tmp_path):
-    import pytest
-
     param = cube.CubeParameters()
     param.initialize("order1a", 1.0, 1.0)
     logfile = str(tmp_path / "test_cube.log")
@@ -793,7 +788,8 @@ def test_iho_limits():
     assert cube.get_iho_limits("order1a") == (0.5, 0.013)
     assert cube.get_iho_limits("order1b") == (0.5, 0.013)
     assert cube.get_iho_limits("order2") == (1.0, 0.023)
-    assert cube.get_iho_limits("unknown") is None
+    with pytest.raises(ValueError, match="Unknown IHO order: unknown"):
+        cube.get_iho_limits("unknown")
 
 
 def test_cube_node_nominate_branches():
