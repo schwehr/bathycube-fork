@@ -95,7 +95,6 @@ disable = [
     "f-string-without-interpolation",
     "fixme",
     "import-error",
-    "import-outside-toplevel",
     "inconsistent-return-statements",
     "invalid-name",
     "line-too-long",

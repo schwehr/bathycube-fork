@@ -1,4 +1,7 @@
+import inspect
+
 import numpy as np
+import pytest
 from pytest import approx
 
 from bathycube import numba_cube as cube
@@ -525,8 +528,6 @@ def test_compile_now():
 
 
 def test_run_cube_gridding_variants():
-    import pytest
-
     x = np.array([101.0, 102.0, 103.0, 101.5, 102.5])
     y = np.array([199.0, 198.0, 197.0, 198.5, 197.5])
     z = np.array([10.0, 11.0, 10.5, 10.2, 10.8])
@@ -1203,8 +1204,6 @@ def test_numba_cube_py_funcs_coverage():
     )
 
     # __main__ block coverage
-    import inspect
-
     lines, _ = inspect.getsourcelines(cube)
     main_idx = next(i for i, line in enumerate(lines) if "if __name__ ==" in line)
     padded_src = "\n" * main_idx + "".join(lines[main_idx:])

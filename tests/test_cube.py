@@ -1,4 +1,6 @@
 import json
+import logging
+import runpy
 
 import numpy as np
 import pytest
@@ -750,8 +752,6 @@ def test_cube_grid_multihypothesis_spatial_search():
 
 
 def test_cube_logging_and_filters(tmp_path):
-    import logging
-
     log_file = str(tmp_path / "test.log")
     logger = cube.return_logger(logfile=log_file, loglevel=logging.DEBUG)
     logger.debug("debug message")
@@ -1046,8 +1046,6 @@ def test_cube_grid_more_spatial_searches_and_shortcuts():
 
 
 def test_run_cube_gridding_extra_kwargs_and_main():
-    import runpy
-
     # Test extra kwargs not in CubeParameters
     dg, _, _, _ = cube.run_cube_gridding(
         depth=np.array([10.0]),
