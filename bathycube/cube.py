@@ -20,8 +20,8 @@ class StdErrFilter(logging.Filter):
     filter out messages that are not CRITICAL or ERROR or WARNING
     """
 
-    def filter(self, rec):
-        return rec.levelno in (logging.CRITICAL, logging.ERROR, logging.WARNING)
+    def filter(self, record):
+        return record.levelno in (logging.CRITICAL, logging.ERROR, logging.WARNING)
 
 
 class StdOutFilter(logging.Filter):
@@ -29,8 +29,8 @@ class StdOutFilter(logging.Filter):
     filter out messages that are not DEBUG or INFO
     """
 
-    def filter(self, rec):
-        return rec.levelno in (logging.DEBUG, logging.INFO)
+    def filter(self, record):
+        return record.levelno in (logging.DEBUG, logging.INFO)
 
 
 def return_logger(logfile: str = None, loglevel=logging.INFO):
