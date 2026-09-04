@@ -656,6 +656,44 @@ def test_numba_cube_py_funcs_coverage():
     grid = cube.return_new_cubegrid.py_func(100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params)
     cube.CubeGrid.class_type.methods["__init__"](grid, 100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params)
 
+    class MockHypoNoneItem:
+        def __init__(self):
+            self.data = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
+            self.next_data = None
+
+        def get_nearest_in_depth(self, d, tol):
+            return 0
+
+        def get_item(self, idx):
+            return None
+
+    class MockNode:
+        def __init__(self):
+            self.hypotheses = MockHypoNoneItem()
+            self.depth_tolerance = 0.01
+            self.nominated = None
+            self.no_data_value = np.float32(np.nan)
+            self.max_hypothesis_ratio = 5.0
+            self.variance_selection = "cube"
+            self.stddev_to_conf_scale = 1.96
+
+    class MockGrid:
+        def __init__(self, num_rows, num_columns, p):
+            self.num_rows = num_rows
+            self.num_columns = num_columns
+            self.resolution_x = np.float32(p.grid_resolution_x)
+            self.resolution_y = np.float32(p.grid_resolution_y)
+            self.minimum_easting = 100.0
+            self.maximum_northing = 200.0
+            self.dist_scale = p.dist_scale
+            self.inv_dist_exponent = p.inv_dist_exponent
+            self.iho_fixed = p.iho_fixed
+            self.iho_percent = p.iho_percent
+            self.min_context = p.min_context
+            self.max_context = p.max_context
+            self.no_data_value = np.float32(np.nan)
+            self.grid = [[cube.return_new_cubenode.py_func() for _ in range(num_columns)] for _ in range(num_rows)]
+
     # Run py_funcs with Debug=True and Debug=False
     for debug_mode in [False, True]:
         cube.Debug = debug_mode
@@ -682,27 +720,6 @@ def test_numba_cube_py_funcs_coverage():
         # nominate failure branches
         assert not cube.cube_node_nominate_hypothesis.py_func(cube.return_new_cubenode.py_func(), np.float32(10.0))
         assert not cube.cube_node_nominate_hypothesis.py_func(n_op, np.float32(999.0))
-
-        class MockHypoNoneItem:
-            def __init__(self):
-                self.data = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
-                self.next_data = None
-
-            def get_nearest_in_depth(self, d, tol):
-                return 0
-
-            def get_item(self, idx):
-                return None
-
-        class MockNode:
-            def __init__(self):
-                self.hypotheses = MockHypoNoneItem()
-                self.depth_tolerance = 0.01
-                self.nominated = None
-                self.no_data_value = np.float32(np.nan)
-                self.max_hypothesis_ratio = 5.0
-                self.variance_selection = "cube"
-                self.stddev_to_conf_scale = 1.96
 
         n_mock_nom = MockNode()
         assert not cube.cube_node_nominate_hypothesis.py_func(n_mock_nom, np.float32(10.0))
@@ -1021,23 +1038,6 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_extract_posterior_depth_uncertainty.py_func(n_all_z, np.float32(10.0), np.float32(0.5))
 
         # Grid insertion & extraction
-        class MockGrid:
-            def __init__(self, num_rows, num_columns, p):
-                self.num_rows = num_rows
-                self.num_columns = num_columns
-                self.resolution_x = np.float32(p.grid_resolution_x)
-                self.resolution_y = np.float32(p.grid_resolution_y)
-                self.minimum_easting = 100.0
-                self.maximum_northing = 200.0
-                self.dist_scale = p.dist_scale
-                self.inv_dist_exponent = p.inv_dist_exponent
-                self.iho_fixed = p.iho_fixed
-                self.iho_percent = p.iho_percent
-                self.min_context = p.min_context
-                self.max_context = p.max_context
-                self.no_data_value = np.float32(np.nan)
-                self.grid = [[cube.return_new_cubenode.py_func() for _ in range(num_columns)] for _ in range(num_rows)]
-
         grid_test = MockGrid(5, 5, params)
         z_arr = np.array([10.0, 100.0, 1.0, 15.0, 10.0], dtype=np.float32)
         thu_arr = np.array([0.1, 100.0, 0.001, 0.5, 0.5], dtype=np.float32)
