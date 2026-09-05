@@ -1298,9 +1298,8 @@ class CubeNode:
 
         for hyp in self.hypotheses:
             print(
-                "Hypothesis {} - depth={}, variance={}, number_of_points={}".format(
-                    hyp.hypothesis_number, hyp.current_depth, hyp.current_variance, hyp.number_of_points
-                )
+                f"Hypothesis {hyp.hypothesis_number} - depth={hyp.current_depth}, "
+                f"variance={hyp.current_variance}, number_of_points={hyp.number_of_points}"
             )
 
 
