@@ -90,7 +90,6 @@ disable = [
     "exec-used",
     "f-string-without-interpolation",
     "fixme",
-    "import-error",
     "inconsistent-return-statements",
     "invalid-name",
     "line-too-long",
