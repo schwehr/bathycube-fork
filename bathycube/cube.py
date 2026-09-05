@@ -102,13 +102,13 @@ def get_iho_limits(iho_order: str) -> tuple[float, float]:
     """
     if iho_order == "exclusive":
         return 0.15, 0.0075
-    elif iho_order == "special":
+    if iho_order == "special":
         return 0.25, 0.0075
-    elif iho_order == "order1a":
+    if iho_order == "order1a":
         return 0.5, 0.013
-    elif iho_order == "order1b":
+    if iho_order == "order1b":
         return 0.5, 0.013
-    elif iho_order == "order2":
+    if iho_order == "order2":
         return 1.0, 0.023
     raise ValueError(f"Unknown IHO order: {iho_order}")
 
@@ -1681,11 +1681,11 @@ class CubeGrid:
 
         if method == "local":
             return self.get_grid_values(("depth",), "local")[0]
-        elif method == "posterior":
+        if method == "posterior":
             return self.get_grid_values(("depth",), "posterior")[0]
-        elif method == "prior":
+        if method == "prior":
             return self.get_grid_values(("depth",), "prior")[0]
-        elif method == "predicted":
+        if method == "predicted":
             return self.get_grid_values(("depth",), "predicted")[0]
 
     def get_grid_uncertainty(self, method: str = "local"):
@@ -1705,11 +1705,11 @@ class CubeGrid:
 
         if method == "local":
             return self.get_grid_values(("uncertainty",), "local")[0]
-        elif method == "posterior":
+        if method == "posterior":
             return self.get_grid_values(("uncertainty",), "posterior")[0]
-        elif method == "prior":
+        if method == "prior":
             return self.get_grid_values(("uncertainty",), "prior")[0]
-        elif method == "predicted":
+        if method == "predicted":
             return self.get_grid_values(("uncertainty",), "predicted")[0]
 
     def get_grid_ratio(self, method: str = "local"):
@@ -1729,11 +1729,11 @@ class CubeGrid:
 
         if method == "local":
             return self.get_grid_values(("ratio",), "local")[0]
-        elif method == "posterior":
+        if method == "posterior":
             return self.get_grid_values(("ratio",), "posterior")[0]
-        elif method == "prior":
+        if method == "prior":
             return self.get_grid_values(("ratio",), "prior")[0]
-        elif method == "predicted":
+        if method == "predicted":
             return self.get_grid_values(("ratio",), "predicted")[0]
 
     def get_grid_number_hypotheses(self):
@@ -1780,7 +1780,7 @@ class CubeGrid:
                 ),
                 "local",
             )
-        elif method == "posterior":
+        if method == "posterior":
             return self.get_grid_values(
                 (
                     "depth",
@@ -1788,7 +1788,7 @@ class CubeGrid:
                 ),
                 "posterior",
             )
-        elif method == "prior":
+        if method == "prior":
             return self.get_grid_values(
                 (
                     "depth",
@@ -1796,7 +1796,7 @@ class CubeGrid:
                 ),
                 "prior",
             )
-        elif method == "predicted":
+        if method == "predicted":
             return self.get_grid_values(
                 (
                     "depth",

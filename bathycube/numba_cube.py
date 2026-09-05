@@ -44,13 +44,13 @@ def get_iho_limits(iho_order: str):
     """
     if iho_order == "exclusive":
         return 0.15, 0.0075
-    elif iho_order == "special":
+    if iho_order == "special":
         return 0.25, 0.0075
-    elif iho_order == "order1a":
+    if iho_order == "order1a":
         return 0.5, 0.013
-    elif iho_order == "order1b":
+    if iho_order == "order1b":
         return 0.5, 0.013
-    elif iho_order == "order2":
+    if iho_order == "order2":
         return 1.0, 0.023
 
 
@@ -723,10 +723,7 @@ def cube_node_is_nominated(node: CubeNode):
         if there is a nominated hypothesis, return True
     """
 
-    if node.nominated is None:
-        return False
-    else:
-        return True
+    return node.nominated is not None
 
 
 @njit
@@ -1337,10 +1334,9 @@ def cube_node_get_nominated_depth_uncertainty(node: CubeNode):
         uncertainty = node.stddev_to_conf_scale * numbaf32(np.sqrt(node.nominated.current_variance))
         ratio = numbaf32(0.0)
         return depth, uncertainty, ratio
-    else:
-        if Debug:
-            print("cube_node_get_nominated_depth_uncertainty: unable to get hypothesis answer, no samples found")
-        return node.no_data_value, node.no_data_value, node.no_data_value
+    if Debug:
+        print("cube_node_get_nominated_depth_uncertainty: unable to get hypothesis answer, no samples found")
+    return node.no_data_value, node.no_data_value, node.no_data_value
 
 
 @njit
@@ -1377,12 +1373,9 @@ def cube_node_get_generic_hypothesis_depth_uncertainty(node: CubeNode, hypo: Hyp
             uncertainty = node.stddev_to_conf_scale * numbaf32(np.sqrt(hypo.current_variance))
         ratio = numbaf32(0.0)
         return depth, uncertainty, ratio
-    else:
-        if Debug:
-            print(
-                "cube_node_get_generic_hypothesis_depth_uncertainty: unable to get hypothesis answer, no samples found"
-            )
-        return node.no_data_value, node.no_data_value, node.no_data_value
+    if Debug:
+        print("cube_node_get_generic_hypothesis_depth_uncertainty: unable to get hypothesis answer, no samples found")
+    return node.no_data_value, node.no_data_value, node.no_data_value
 
 
 @njit
@@ -1410,29 +1403,29 @@ def cube_node_extract_depth_uncertainty(node: CubeNode):
             print("cube_node_extract_depth_uncertainty: getting the nominated hypothesis answer")
         depth, uncertainty, ratio = cube_node_get_nominated_depth_uncertainty(node)
         return depth, uncertainty, ratio
-    elif node.hypotheses is None:
+    if node.hypotheses is None:
         if Debug:
             print("cube_node_extract_depth_uncertainty: no answer, no hypotheses found")
         return node.no_data_value, node.no_data_value, node.no_data_value
-    elif node.hypotheses.next_data is None:  # only one hypothesis
+    if node.hypotheses.next_data is None:  # only one hypothesis
         hypo = node.hypotheses.data
         depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, hypo)
         if Debug:
             print("cube_node_extract_depth_uncertainty: getting the hypothesis answer, as only one was found")
         return depth, uncertainty, ratio
-    else:
-        best_hypo, hypo_ratio = cube_node_choose_hypothesis(node)
-        if best_hypo is None:
-            if Debug:
-                print("cube_node_extract_depth_uncertainty: no answer, failed to gather best hypothesis")
-            return node.no_data_value, node.no_data_value, node.no_data_value
-        depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, best_hypo)
-        ratio = hypo_ratio  # use the ratio determined during hypothesis choosing
+
+    best_hypo, hypo_ratio = cube_node_choose_hypothesis(node)
+    if best_hypo is None:
         if Debug:
-            print(
-                "cube_node_extract_depth_uncertainty: getting the hypothesis answer, had to choose across multiple hypotheses"
-            )
-        return depth, uncertainty, ratio
+            print("cube_node_extract_depth_uncertainty: no answer, failed to gather best hypothesis")
+        return node.no_data_value, node.no_data_value, node.no_data_value
+    depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, best_hypo)
+    ratio = hypo_ratio  # use the ratio determined during hypothesis choosing
+    if Debug:
+        print(
+            "cube_node_extract_depth_uncertainty: getting the hypothesis answer, had to choose across multiple hypotheses"
+        )
+    return depth, uncertainty, ratio
 
 
 @njit
@@ -1466,36 +1459,36 @@ def cube_node_extract_closest_depth_uncertainty(node: CubeNode, query_depth: num
             )
         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
         return depth, uncertainty, ratio
-    else:
-        min_error = None
-        nearest_hypo = None
-        total_points = 0
-        for hyp in node.hypotheses.get_data():
-            if (
-                hyp.number_of_samples > 0
-            ):  # check that some data were used in making the hypothesis before accepting it as valid
-                error = abs((hyp.current_depth - numbaf32(query_depth)) / numbaf32(np.sqrt(query_variance)))
-                if min_error is None or error < min_error:
-                    min_error = error
-                    nearest_hypo = hyp
-                total_points += hyp.number_of_samples
-        if nearest_hypo is None:  # should never get to this point
-            if Debug:
-                print("cube_node_extract_closest_depth_uncertainty: no hypothesis found!")
-            return node.no_data_value, node.no_data_value, node.no_data_value
-        else:
-            if Debug:
-                print("cube_node_extract_closest_depth_uncertainty: chose nearest hypothesis")
-            nearest_ratio = numbaf32(
-                max(
-                    0.0,
-                    node.max_hypothesis_ratio
-                    - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
-                )
-            )
-            depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
-            ratio = nearest_ratio
-            return depth, uncertainty, ratio
+
+    min_error = None
+    nearest_hypo = None
+    total_points = 0
+    for hyp in node.hypotheses.get_data():
+        if (
+            hyp.number_of_samples > 0
+        ):  # check that some data were used in making the hypothesis before accepting it as valid
+            error = abs((hyp.current_depth - numbaf32(query_depth)) / numbaf32(np.sqrt(query_variance)))
+            if min_error is None or error < min_error:
+                min_error = error
+                nearest_hypo = hyp
+            total_points += hyp.number_of_samples
+    if nearest_hypo is None:  # should never get to this point
+        if Debug:
+            print("cube_node_extract_closest_depth_uncertainty: no hypothesis found!")
+        return node.no_data_value, node.no_data_value, node.no_data_value
+
+    if Debug:
+        print("cube_node_extract_closest_depth_uncertainty: chose nearest hypothesis")
+    nearest_ratio = numbaf32(
+        max(
+            0.0,
+            node.max_hypothesis_ratio
+            - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
+        )
+    )
+    depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
+    ratio = nearest_ratio
+    return depth, uncertainty, ratio
 
 
 @njit
@@ -1530,39 +1523,39 @@ def cube_node_extract_posterior_depth_uncertainty(node: CubeNode, guide_depth: n
             )
         depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
         return depth, uncertainty, ratio
-    else:
-        max_posterior = None
-        nearest_hypo = None
-        total_points = 0
-        for hyp in node.hypotheses.get_data():
-            if (
-                hyp.number_of_samples > 0
-            ):  # check that some data were used in making the hypothesis before accepting it as valid
-                mean = hyp.current_depth
-                posterior = -numbaf32((guide_depth - mean) ** 2) / numbaf32(2.0 * guide_variance) + numbaf32(
-                    np.log(hyp.number_of_samples)
-                )
-                if max_posterior is None or posterior > max_posterior:
-                    max_posterior = posterior
-                    nearest_hypo = hyp
-                total_points += hyp.number_of_samples
-        if nearest_hypo is None:  # should never get to this point
-            if Debug:
-                print("cube_node_extract_posterior_depth_uncertainty: no hypothesis found!")
-            return node.no_data_value, node.no_data_value, node.no_data_value
-        else:
-            if Debug:
-                print("cube_node_extract_posterior_depth_uncertainty: chose nearest hypothesis")
-            nearest_ratio = numbaf32(
-                max(
-                    0.0,
-                    node.max_hypothesis_ratio
-                    - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
-                )
+
+    max_posterior = None
+    nearest_hypo = None
+    total_points = 0
+    for hyp in node.hypotheses.get_data():
+        if (
+            hyp.number_of_samples > 0
+        ):  # check that some data were used in making the hypothesis before accepting it as valid
+            mean = hyp.current_depth
+            posterior = -numbaf32((guide_depth - mean) ** 2) / numbaf32(2.0 * guide_variance) + numbaf32(
+                np.log(hyp.number_of_samples)
             )
-            depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
-            ratio = nearest_ratio
-            return depth, uncertainty, ratio
+            if max_posterior is None or posterior > max_posterior:
+                max_posterior = posterior
+                nearest_hypo = hyp
+            total_points += hyp.number_of_samples
+    if nearest_hypo is None:  # should never get to this point
+        if Debug:
+            print("cube_node_extract_posterior_depth_uncertainty: no hypothesis found!")
+        return node.no_data_value, node.no_data_value, node.no_data_value
+
+    if Debug:
+        print("cube_node_extract_posterior_depth_uncertainty: chose nearest hypothesis")
+    nearest_ratio = numbaf32(
+        max(
+            0.0,
+            node.max_hypothesis_ratio
+            - (nearest_hypo.number_of_samples / (total_points - nearest_hypo.number_of_samples)),
+        )
+    )
+    depth, uncertainty, ratio = cube_node_get_generic_hypothesis_depth_uncertainty(node, nearest_hypo)
+    ratio = nearest_ratio
+    return depth, uncertainty, ratio
 
 
 @njit
@@ -1583,8 +1576,7 @@ def cube_node_hypothesis_count(node: CubeNode):
 
     if node.hypotheses is None:
         return 0
-    else:
-        return len(node.hypotheses.get_data())
+    return len(node.hypotheses.get_data())
 
 
 @njit
