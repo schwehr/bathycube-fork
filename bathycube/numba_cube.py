@@ -317,8 +317,7 @@ class HypothesisList:
             count = cur.data.number_of_samples
             if count > current_max_pointcount:
                 cur_index = idx
-                if current_max_pointcount > second_highest_count:
-                    second_highest_count = current_max_pointcount
+                second_highest_count = max(second_highest_count, current_max_pointcount)
                 current_max_pointcount = count
             elif count > second_highest_count:
                 second_highest_count = count
@@ -1621,16 +1620,14 @@ def cube_grid_insert_points(
     for i in range(depth.shape[0]):
         max_variance_allowed = (cg.iho_fixed + cg.iho_percent * depth[i] ** 2) / (conf_95_percent**2)
         ratio = max_variance_allowed / vertical_uncertainty[i]
-        if ratio <= 2.0:
-            ratio = 2.0
+        ratio = max(ratio, 2.0)
         max_radius = conf_99_percent * np.sqrt(horizontal_uncertainty[i])
         radius = cg.dist_scale * (ratio - 1.0) ** cg.inv_dist_exponent - max_radius
         if radius < 0.0:
             radius = cg.dist_scale
         elif radius > max_radius:
             radius = max_radius
-        if radius < cg.dist_scale:
-            radius = cg.dist_scale
+        radius = max(radius, cg.dist_scale)
         # determine the coordinates of the effect square.  This is designed to compute the largest region the sounding
         # can effect, and hence to make the insertion more efficient by only offering the sounding where it is likely
         # to be used

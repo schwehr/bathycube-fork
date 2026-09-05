@@ -676,8 +676,7 @@ class CubeNode:
             if hyp.number_of_points > 0:
                 if hyp.number_of_points > current_max_pointcount:
                     best_hypo = hyp
-                    if current_max_pointcount > second_highest_count:
-                        second_highest_count = current_max_pointcount
+                    second_highest_count = max(second_highest_count, current_max_pointcount)
                     current_max_pointcount = hyp.number_of_points
                 elif hyp.number_of_points > second_highest_count:
                     second_highest_count = hyp.number_of_points
@@ -1506,16 +1505,14 @@ class CubeGrid:
             # Determine IHO S-44 derived limits on maximum variance
             max_variance_allowed = (self.iho_fixed + self.iho_percent * z**2) / conf_95_percent**2
             ratio = max_variance_allowed / vertical_uncertainty[i]
-            if ratio <= 2.0:
-                ratio = 2.0
+            ratio = max(ratio, 2.0)
             max_radius = conf_99_percent * np.sqrt(horizontal_uncertainty[i])
             radius = self.dist_scale * (ratio - 1.0) ** self.inv_dist_exponent - max_radius
             if radius < 0.0:
                 radius = self.dist_scale
             elif radius > max_radius:
                 radius = max_radius
-            if radius < self.dist_scale:
-                radius = self.dist_scale
+            radius = max(radius, self.dist_scale)
             self.logger.log(
                 logging.DEBUG,
                 f"insert_points: dist_scale:{self.dist_scale}, ratio:{ratio}, max radius:{max_radius}, max_variance:{max_variance_allowed}",

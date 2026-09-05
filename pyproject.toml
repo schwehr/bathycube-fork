@@ -86,7 +86,6 @@ max-line-length = 120
 
 [tool.pylint.messages_control]
 disable = [
-    "consider-using-max-builtin",
     "duplicate-code",
     "exec-used",
     "f-string-without-interpolation",
