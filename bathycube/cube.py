@@ -122,10 +122,14 @@ class CubeParameters:
         self.dist_exponent = 2.0  # exponent on distance for variance scale
         self.inv_dist_exponent = 1 / self.dist_exponent  # inverse of dist exponent for efficiency
         self.dist_scale = 0.0  # normalization coefficient for distance
-        self.var_scale = 0.0  # variance scale dilution factor, placeholder, will be computed on initialization
+        self.var_scale = (
+            0.0  # variance scale dilution factor, placeholder, will be computed on initialization
+        )
         self.iho_fixed = 0.0  # fixed portion of IHO error budget, placeholder, will be computed on initialization
         self.iho_percent = 0.0  # variable portion of IHO error budget, placeholder, will be computed on initialization
-        self.median_length = 11  # Length of median pre-filter sort queue (must be odd number for algorithm)
+        self.median_length = (
+            11  # Length of median pre-filter sort queue (must be odd number for algorithm)
+        )
         self.quotient_limit = 30.0  # Outlier quotient upper allowable limit, Approx. 0.1% F(1,6)
         self.discount = 1.0  # Discount factor for evolution noise variance
         self.est_offset = 4.0  # Threshold for significant offset from current estimate to warrant an intervention, Set by West & Harrison's method of significant percentage points.
@@ -158,7 +162,12 @@ class CubeParameters:
         """
         return get_iho_limits(self.iho_order)
 
-    def initialize(self, iho_order: str = "order1a", grid_resolution_x: float = 1.0, grid_resolution_y: float = 1.0):
+    def initialize(
+        self,
+        iho_order: str = "order1a",
+        grid_resolution_x: float = 1.0,
+        grid_resolution_y: float = 1.0,
+    ):
         """
         Build the situational parameters now, those related to IHO order or grid resolution.
 
@@ -179,7 +188,9 @@ class CubeParameters:
         self.grid_resolution_x = grid_resolution_x
         self.grid_resolution_y = grid_resolution_y
         # Compute distance scale based on node spacing
-        self.dist_scale = min(grid_resolution_x, grid_resolution_y)  # normalization coefficient for distance
+        self.dist_scale = min(
+            grid_resolution_x, grid_resolution_y
+        )  # normalization coefficient for distance
         self.min_context = min(1, int(self.min_context / self.dist_scale))
         self.max_context = min(1, int(self.max_context / self.dist_scale))
         # Compute variance scaling factor for dilution function
@@ -221,7 +232,9 @@ class Hypothesis:
         self.current_depth = initial_mean_estimate  # current depth mean estimate
         self.current_variance = initial_variance_estimate  # current depth variance estimate
         self.predict_depth = initial_mean_estimate  # current depth next-state mean prediction
-        self.predict_variance = initial_variance_estimate  # current depth next-state variance prediction
+        self.predict_variance = (
+            initial_variance_estimate  # current depth next-state variance prediction
+        )
         self.cum_bayes_fac = 1.0  # cumulative bayes factor for node monitoring
         self.seq_length = 0  # worst case sequence length for monitoring
         self.hypothesis_number = 0  # index term for debugging
@@ -394,7 +407,9 @@ class CubeNode:
         """
 
         hypo_idx = [
-            self.hypotheses.index(h) for h in self.hypotheses if (abs(depth - h.current_depth) < self.depth_tolerance)
+            self.hypotheses.index(h)
+            for h in self.hypotheses
+            if (abs(depth - h.current_depth) < self.depth_tolerance)
         ]
         if len(hypo_idx) == 0:
             self.logger.log(
@@ -406,7 +421,9 @@ class CubeNode:
             if self.nominated is not None and (self.nominated == self.hypotheses[hypo_idx]):
                 self.nominated = None
             self.hypotheses.pop(hypo_idx)
-            self.logger.log(logging.DEBUG, f"remove_hypothesis: hypothesis number {hypo_idx} removed")
+            self.logger.log(
+                logging.DEBUG, f"remove_hypothesis: hypothesis number {hypo_idx} removed"
+            )
         else:
             self.logger.log(
                 logging.ERROR,
@@ -435,7 +452,9 @@ class CubeNode:
         for hypo in self.hypotheses:
             depth_difference = abs(depth - hypo.current_depth)
             if depth_difference < self.depth_tolerance:
-                if min_depth_distance:  # this is not the first hypothesis that we have found within the tolerance
+                if (
+                    min_depth_distance
+                ):  # this is not the first hypothesis that we have found within the tolerance
                     if depth_difference < min_depth_distance:
                         min_depth_distance = depth_difference
                         curr_hypo = hypo
@@ -446,7 +465,9 @@ class CubeNode:
                 else:  # this is the first hypo found within the tolerance
                     min_depth_distance = depth_difference
                     curr_hypo = hypo
-                    self.logger.log(logging.DEBUG, f"nominate_hypothesis: selecting hypothesis at depth {depth}")
+                    self.logger.log(
+                        logging.DEBUG, f"nominate_hypothesis: selecting hypothesis at depth {depth}"
+                    )
         self.nominated = curr_hypo
         if self.nominated is None:
             self.logger.log(
@@ -498,7 +519,10 @@ class CubeNode:
         try:
             hypo = self.hypotheses[hypo_index]
         except IndexError:
-            self.logger.log(logging.ERROR, f"monitor_hypothesis: Unable to pull hypothesis at index {hypo_index}")
+            self.logger.log(
+                logging.ERROR,
+                f"monitor_hypothesis: Unable to pull hypothesis at index {hypo_index}",
+            )
             return False
 
         forecast_variance = hypo.predict_variance + new_variance
@@ -531,7 +555,9 @@ class CubeNode:
         hypo.cum_bayes_fac = bayes_factor * min(1.0, hypo.cum_bayes_fac)
         # check for consecutive failure errors
         # The runlength_t is W&H's limit on l_t (i.e., the number of consecutively bad Bayes factors which indicate that there has been a gradual shift away from the predictor)
-        if (hypo.cum_bayes_fac < self.bayes_factor_threshold) or (hypo.seq_length > self.runlength_threshold):
+        if (hypo.cum_bayes_fac < self.bayes_factor_threshold) or (
+            hypo.seq_length > self.runlength_threshold
+        ):
             self.logger.log(
                 logging.DEBUG,
                 f"monitor_hypothesis: cum bayes fac {hypo.cum_bayes_fac} < {self.bayes_factor_threshold} or seq length {hypo.seq_length} > {self.runlength_threshold}, potential outlier",
@@ -553,11 +579,16 @@ class CubeNode:
         try:
             hypo = self.hypotheses[hypo_index]
         except IndexError:
-            self.logger.log(logging.ERROR, f"monitor_hypothesis: Unable to pull hypothesis at index {hypo_index}")
+            self.logger.log(
+                logging.ERROR,
+                f"monitor_hypothesis: Unable to pull hypothesis at index {hypo_index}",
+            )
             return False
         hypo.cum_bayes_fac = 1.0
         hypo.seq_length = 0
-        self.logger.log(logging.DEBUG, "reset_monitor: clear the monitoring data from the provided hypothesis")
+        self.logger.log(
+            logging.DEBUG, "reset_monitor: clear the monitoring data from the provided hypothesis"
+        )
 
     def update_hypothesis(self, hypo_index: int, depth: float, variance: float):
         """
@@ -588,11 +619,16 @@ class CubeNode:
         # check current estimate with node monitoring
         monitoring_answer = self.monitor_hypothesis(hypo_index, depth, variance)
         if not monitoring_answer:
-            self.logger.log(logging.DEBUG, "update_hypothesis: monitoring determined an intervention is required")
+            self.logger.log(
+                logging.DEBUG,
+                "update_hypothesis: monitoring determined an intervention is required",
+            )
             return False
 
         if self.variance_selection != "cube":
-            hypo.variance_estimate = (hypo.number_of_points - 1) * hypo.variance_estimate / hypo.number_of_points + (
+            hypo.variance_estimate = (
+                hypo.number_of_points - 1
+            ) * hypo.variance_estimate / hypo.number_of_points + (
                 depth - hypo.current_depth
             ) ** 2 / hypo.number_of_points
         # add capability to 'age' the sounding with a discount factor.
@@ -602,7 +638,9 @@ class CubeNode:
         innovation = depth - hypo.predict_depth
         hypo.predict_depth += gain * innovation
         hypo.current_depth = hypo.predict_depth
-        hypo.current_variance = variance * hypo.predict_variance / (variance + hypo.predict_variance)
+        hypo.current_variance = (
+            variance * hypo.predict_variance / (variance + hypo.predict_variance)
+        )
         hypo.predict_variance = hypo.current_variance + sys_variance
         hypo.number_of_points += 1
         self.logger.log(
@@ -673,7 +711,9 @@ class CubeNode:
                 elif hyp.number_of_points > second_highest_count:
                     second_highest_count = hyp.number_of_points
         if second_highest_count and current_max_pointcount:
-            hypo_ratio = max(0.0, self.max_hypothesis_ratio - (current_max_pointcount / second_highest_count))
+            hypo_ratio = max(
+                0.0, self.max_hypothesis_ratio - (current_max_pointcount / second_highest_count)
+            )
         self.logger.log(
             logging.DEBUG,
             f"choose_hypothesis: hypothesis number {best_hypo.hypothesis_number} picked as it had the most points ({current_max_pointcount}), hypothesis strength {hypo_ratio}",
@@ -733,7 +773,9 @@ class CubeNode:
         """
 
         if self.n_queued < 3:
-            self.logger.log(logging.DEBUG, f"truncate: with {self.n_queued} queued points, truncate unnecessary")
+            self.logger.log(
+                logging.DEBUG, f"truncate: with {self.n_queued} queued points, truncate unnecessary"
+            )
             return
         mean = 0.0
         sum_square_diff = 0.0
@@ -761,7 +803,9 @@ class CubeNode:
         for idx in outlier_index:
             self.queue.pop(idx)
             self.n_queued -= 1
-        self.logger.log(logging.DEBUG, f"truncate: removed {len(outlier_index)} points from the queue")
+        self.logger.log(
+            logging.DEBUG, f"truncate: removed {len(outlier_index)} points from the queue"
+        )
 
     def flush_queue(self):
         """
@@ -812,7 +856,8 @@ class CubeNode:
             return
         if not self.queue:
             self.logger.log(
-                logging.DEBUG, f"queue_fill: queue is empty, adding depth {depth}, variance {variance} to queue"
+                logging.DEBUG,
+                f"queue_fill: queue is empty, adding depth {depth}, variance {variance} to queue",
             )
             self.queue.append([depth, variance])
         else:
@@ -901,7 +946,8 @@ class CubeNode:
         if low_water >= high_water:  # confidence limits do not overlap
             self.truncate()  # remove any outliers
         self.logger.log(
-            logging.DEBUG, f"queue_insert: queue full, returning median point depth {mdepth}, variance {mvariance}"
+            logging.DEBUG,
+            f"queue_insert: queue full, returning median point depth {mdepth}, variance {mvariance}",
         )
         return mdepth, mvariance
 
@@ -928,7 +974,10 @@ class CubeNode:
         if not self.queue:
             self.n_queued = 0
         if self.use_queue:
-            self.logger.log(logging.DEBUG, f"add_to_queue: adding depth {depth} variance {variance} to the queue")
+            self.logger.log(
+                logging.DEBUG,
+                f"add_to_queue: adding depth {depth} variance {variance} to the queue",
+            )
             if self.n_queued < self.median_length:
                 self.queue_fill(depth, variance)
             else:
@@ -978,9 +1027,12 @@ class CubeNode:
             # do the test for blunders here, since it makes no sense to test when there is no predicted depth
             # blunders = beam solutions generated by the multibeam that do not correctly represent the seafloor
             blunder_limit = min(
-                target_depth - self.blunder_min, target_depth - self.blunder_percent * abs(target_depth)
+                target_depth - self.blunder_min,
+                target_depth - self.blunder_percent * abs(target_depth),
             )
-            blunder_limit = min(blunder_limit, target_depth - self.blunder_scalar * np.sqrt(self.predicted_variance))
+            blunder_limit = min(
+                blunder_limit, target_depth - self.blunder_scalar * np.sqrt(self.predicted_variance)
+            )
             if depth < blunder_limit:
                 self.logger.log(
                     logging.DEBUG,
@@ -989,7 +1041,8 @@ class CubeNode:
                 return
         else:
             self.logger.log(
-                logging.DEBUG, f"add_point_to_node: Blunder limit test pass, no predicted depth for this node"
+                logging.DEBUG,
+                f"add_point_to_node: Blunder limit test pass, no predicted depth for this node",
             )
             target_depth = depth
         calculated_captdist = self.capture_dist_scale * abs(target_depth)
@@ -1037,13 +1090,20 @@ class CubeNode:
             elif value_id == "uncertainty":
                 data.append(self.stddev_to_conf_scale * np.sqrt(self.nominated.current_variance))
             elif value_id == "ratio":
-                data.append(0.0)  # having a nominated hypothesis means there is no ratio, only one hypothesis
+                data.append(
+                    0.0
+                )  # having a nominated hypothesis means there is no ratio, only one hypothesis
             elif value_id == "n_hypotheses":
                 data.append(self.return_number_of_hypotheses())
-        self.logger.log(logging.DEBUG, f"_return_nominated_answer: good hypothesis, returning {data} for {value}")
+        self.logger.log(
+            logging.DEBUG,
+            f"_return_nominated_answer: good hypothesis, returning {data} for {value}",
+        )
         return data
 
-    def _return_answer_from_hypothesis(self, hyp: Hypothesis, ratio: float, value: tuple = ("depth", "uncertainty")):
+    def _return_answer_from_hypothesis(
+        self, hyp: Hypothesis, ratio: float, value: tuple = ("depth", "uncertainty")
+    ):
         """
         Provide the answer for the given value identifiers for the given hypothesis.
 
@@ -1072,7 +1132,8 @@ class CubeNode:
                 elif value_id == "uncertainty":
                     if self.variance_selection == "max":
                         data.append(
-                            self.stddev_to_conf_scale * np.sqrt(max(hyp.current_variance, hyp.variance_estimate))
+                            self.stddev_to_conf_scale
+                            * np.sqrt(max(hyp.current_variance, hyp.variance_estimate))
                         )
                     elif self.variance_selection == "input":
                         data.append(self.stddev_to_conf_scale * np.sqrt(hyp.variance_estimate))
@@ -1083,10 +1144,14 @@ class CubeNode:
                 elif value_id == "n_hypotheses":
                     data.append(self.return_number_of_hypotheses())
             self.logger.log(
-                logging.DEBUG, f"_return_answer_from_hypothesis: good hypothesis, returning {data} for {value}"
+                logging.DEBUG,
+                f"_return_answer_from_hypothesis: good hypothesis, returning {data} for {value}",
             )
         else:
-            self.logger.log(logging.DEBUG, f"_return_answer_from_hypothesis: hypothesis empty, returning nodatavalues")
+            self.logger.log(
+                logging.DEBUG,
+                f"_return_answer_from_hypothesis: hypothesis empty, returning nodatavalues",
+            )
             for _ in value:
                 data.append(self.no_data_value)
         return data
@@ -1117,17 +1182,23 @@ class CubeNode:
             data = []
             for _ in value:
                 data.append(self.no_data_value)
-        elif len(self.hypotheses) == 1:  # Special case: only one depth hypothesis (the usual case, we hope ...)
+        elif (
+            len(self.hypotheses) == 1
+        ):  # Special case: only one depth hypothesis (the usual case, we hope ...)
             self.logger.log(logging.DEBUG, f"extract_node_value: only one hypothesis!")
             hyp = self.hypotheses[0]
-            data = self._return_answer_from_hypothesis(hyp, 0.0, value)  # ratio of 0 for only having one hypothesis
+            data = self._return_answer_from_hypothesis(
+                hyp, 0.0, value
+            )  # ratio of 0 for only having one hypothesis
         else:
             self.logger.log(logging.DEBUG, f"extract_node_value: multiple hypotheses found")
             hyp, ratio = self.choose_hypothesis()
             data = self._return_answer_from_hypothesis(hyp, ratio, value)
         return data
 
-    def extract_closest_node_value(self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")):
+    def extract_closest_node_value(
+        self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")
+    ):
         """
         Extract the node values for the hypothesis which is closest in depth to the supplied depth/variance point values, in a
         minimum error sense.  If there are no depth hypotheses in this node, self.no_data_value is returned.
@@ -1148,12 +1219,15 @@ class CubeNode:
         """
 
         if self.nominated is not None:
-            self.logger.log(logging.DEBUG, f"extract_closest_node_value: using nominated hypothesis")
+            self.logger.log(
+                logging.DEBUG, f"extract_closest_node_value: using nominated hypothesis"
+            )
             return self._return_nominated_answer(value)
 
         if not self.hypotheses or len(self.hypotheses) == 1:
             self.logger.log(
-                logging.DEBUG, f"extract_closest_node_value: one hypothesis or less, falling back on basic extraction"
+                logging.DEBUG,
+                f"extract_closest_node_value: one hypothesis or less, falling back on basic extraction",
             )
             # with no hypotheses or just one hypothesis, this is just doing the basic extraction
             return self.extract_node_value(value)
@@ -1207,7 +1281,9 @@ class CubeNode:
         """
 
         if self.nominated is not None:
-            self.logger.log(logging.DEBUG, f"extract_posterior_weighted_node_value: using nominated hypothesis")
+            self.logger.log(
+                logging.DEBUG, f"extract_posterior_weighted_node_value: using nominated hypothesis"
+            )
             return self._return_nominated_answer(value)
         if not self.hypotheses or len(self.hypotheses) == 1:
             self.logger.log(
@@ -1230,7 +1306,9 @@ class CubeNode:
                     nearest_hypo = hyp
                 total_points += hyp.number_of_points
         if nearest_hypo is None:  # should never get to this point
-            self.logger.log(logging.WARNING, f"extract_posterior_weighted_node_value: no hypothesis found!")
+            self.logger.log(
+                logging.WARNING, f"extract_posterior_weighted_node_value: no hypothesis found!"
+            )
             data = []
             for _ in value:
                 data.append(self.no_data_value)
@@ -1241,7 +1319,9 @@ class CubeNode:
                 - (nearest_hypo.number_of_points / (total_points - nearest_hypo.number_of_points)),
             )
             data = self._return_answer_from_hypothesis(nearest_hypo, ratio, value)
-            self.logger.log(logging.DEBUG, f"extract_posterior_weighted_node_value: found {data} for {value}")
+            self.logger.log(
+                logging.DEBUG, f"extract_posterior_weighted_node_value: found {data} for {value}"
+            )
         return data
 
     def return_depth(self):
@@ -1431,7 +1511,13 @@ class CubeGrid:
         elif isinstance(northing, list):
             northing = np.array(northing)
 
-        assert depth.size == horizontal_uncertainty.size == vertical_uncertainty.size == easting.size == northing.size
+        assert (
+            depth.size
+            == horizontal_uncertainty.size
+            == vertical_uncertainty.size
+            == easting.size
+            == northing.size
+        )
         return depth, horizontal_uncertainty, vertical_uncertainty, easting, northing
 
     @property
@@ -1483,8 +1569,10 @@ class CubeGrid:
             new northing values associated with the points
         """
 
-        depth, horizontal_uncertainty, vertical_uncertainty, easting, northing = self._validate_insert_points(
-            depth, horizontal_uncertainty, vertical_uncertainty, easting, northing
+        depth, horizontal_uncertainty, vertical_uncertainty, easting, northing = (
+            self._validate_insert_points(
+                depth, horizontal_uncertainty, vertical_uncertainty, easting, northing
+            )
         )
         conf_95_percent = 1.96
         conf_99_percent = 2.95
@@ -1517,9 +1605,15 @@ class CubeGrid:
             min_y = int((self.maximum_northing - (northing[i] + radius)) / self.resolution_y)
             max_y = int((self.maximum_northing - (northing[i] - radius)) / self.resolution_y)
             # check that the sounding hits somewhere in the grid
-            if max_x < 0 or min_x >= (self.num_columns - 1) or max_y < 0 or min_y >= (self.num_rows - 1):
+            if (
+                max_x < 0
+                or min_x >= (self.num_columns - 1)
+                or max_y < 0
+                or min_y >= (self.num_rows - 1)
+            ):
                 self.logger.log(
-                    logging.DEBUG, f"insert_points: Sounding out of bounds, ({min_x},{min_y}) ({max_x},{max_y})"
+                    logging.DEBUG,
+                    f"insert_points: Sounding out of bounds, ({min_x},{min_y}) ({max_x},{max_y})",
                 )
                 continue  # out of bounds
             # clip to the interior of the current grid
@@ -1533,8 +1627,12 @@ class CubeGrid:
             )
             for y in range(min_y, max_y + 1):
                 for x in range(min_x, max_x + 1):
-                    node_x = self.minimum_easting + (x * self.resolution_x) + (self.resolution_x / 2)
-                    node_y = self.maximum_northing - (y * self.resolution_y) - (self.resolution_y / 2)
+                    node_x = (
+                        self.minimum_easting + (x * self.resolution_x) + (self.resolution_x / 2)
+                    )
+                    node_y = (
+                        self.maximum_northing - (y * self.resolution_y) - (self.resolution_y / 2)
+                    )
                     distance_sq = (node_x - easting[i]) ** 2 + (node_y - northing[i]) ** 2
                     if distance_sq >= radius**2:
                         self.logger.log(
@@ -1542,7 +1640,9 @@ class CubeGrid:
                             f"insert_points: rejecting point as out of distance to node at row/col, ({y}, {x})",
                         )
                         continue  # distance to great, not including this point in this node
-                    self.logger.log(logging.DEBUG, f"insert_points: adding point to node at row/col, ({y}, {x})")
+                    self.logger.log(
+                        logging.DEBUG, f"insert_points: adding point to node at row/col, ({y}, {x})"
+                    )
                     self.grid[y][x].add_point_to_node(
                         z, vertical_uncertainty[i], horizontal_uncertainty[i], distance_sq
                     )
@@ -1578,7 +1678,9 @@ class CubeGrid:
             list of numpy arrays for the grid, one for each variable identifier in the provided value list
         """
         data = []
-        self.logger.log(logging.DEBUG, f"get_grid_values: getting grid values for {value} using method {method}")
+        self.logger.log(
+            logging.DEBUG, f"get_grid_values: getting grid values for {value} using method {method}"
+        )
         for _ in value:
             vgrid = np.full((self.num_rows, self.num_columns), self.no_data_value)
             data.append(vgrid)
@@ -1643,10 +1745,15 @@ class CubeGrid:
                             )
                             node_data = node.extract_node_value(value)
                         else:
-                            self.logger.log(logging.DEBUG, f"get_grid_values: extract value from closest node found")
+                            self.logger.log(
+                                logging.DEBUG,
+                                f"get_grid_values: extract value from closest node found",
+                            )
                             closest_data = closest_node.extract_node_value(("depth", "uncertainty"))
                             if method == "local":
-                                node_data = node.extract_closest_node_value(closest_data[0], closest_data[1], value)
+                                node_data = node.extract_closest_node_value(
+                                    closest_data[0], closest_data[1], value
+                                )
                             else:
                                 node_data = node.extract_posterior_weighted_node_value(
                                     closest_data[0], closest_data[1], value
@@ -1654,7 +1761,9 @@ class CubeGrid:
                 elif method == "prior":
                     node_data = node.extract_node_value(value)
                 else:  # predicted
-                    node_data = node.extract_closest_node_value(node.predicted_depth, node.predicted_variance, value)
+                    node_data = node.extract_closest_node_value(
+                        node.predicted_depth, node.predicted_variance, value
+                    )
                 for cnt, node_value in enumerate(node_data):
                     data[cnt][row, col] = node_value
         return data
@@ -1876,7 +1985,11 @@ def run_cube_gridding(
     """
 
     cp = CubeParameters()
-    cp.initialize(iho_order=iho_order, grid_resolution_x=grid_resolution_x, grid_resolution_y=grid_resolution_y)
+    cp.initialize(
+        iho_order=iho_order,
+        grid_resolution_x=grid_resolution_x,
+        grid_resolution_y=grid_resolution_y,
+    )
     for kpam, kval in kwargs.items():
         if kpam in dir(cp):
             setattr(cp, kpam, kval)

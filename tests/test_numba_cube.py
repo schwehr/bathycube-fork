@@ -142,7 +142,9 @@ def test_cube_node_set_preddepth():
 
 def test_cube_node_monitor_hypothesis():
     cb = cube.return_new_cubenode()
-    assert not cube.cube_node_monitor_hypothesis(cb, 0, cube.return_new_sounding(1.0, 1.0, 0.0, 0.0))
+    assert not cube.cube_node_monitor_hypothesis(
+        cb, 0, cube.return_new_sounding(1.0, 1.0, 0.0, 0.0)
+    )
     cube.cube_node_new_hypothesis(cb, cube.return_new_sounding(5.0, 0.5, 0.0, 0.0))
     assert not cube.cube_node_monitor_hypothesis(
         cb, 0, cube.return_new_sounding(10.0, 1.0, 0.0, 0.0)
@@ -196,8 +198,12 @@ def test_cube_node_best_hypothesis_index():
     cube.cube_node_new_hypothesis(cb, cube.return_new_sounding(5.0, 1.0, 0.0, 0.0))
     cube.cube_node_new_hypothesis(cb, cube.return_new_sounding(6.0, 1.0, 0.0, 0.0))
     cube.cube_node_new_hypothesis(cb, cube.return_new_sounding(7.0, 1.0, 0.0, 0.0))
-    assert cube.cube_node_best_hypothesis_index(cb, cube.return_new_sounding(5.4, 1.0, 0.0, 0.0)) == 0
-    assert cube.cube_node_best_hypothesis_index(cb, cube.return_new_sounding(5.6, 1.0, 0.0, 0.0)) == 1
+    assert (
+        cube.cube_node_best_hypothesis_index(cb, cube.return_new_sounding(5.4, 1.0, 0.0, 0.0)) == 0
+    )
+    assert (
+        cube.cube_node_best_hypothesis_index(cb, cube.return_new_sounding(5.6, 1.0, 0.0, 0.0)) == 1
+    )
 
 
 def test_cube_node_update_node():
@@ -309,20 +315,28 @@ def test_cube_node_queue_insert():
     cube.cube_node_queue_fill(cb, cube.return_new_sounding(4.5, 1.0, 0.0, 0.0))
     cube.cube_node_queue_fill(cb, cube.return_new_sounding(16.8, 1.0, 0.0, 0.0))
     data = [d.depth for d in cb.queue.get_data()]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
+    )
 
     median_data = cube.cube_node_queue_insert(cb, cube.return_new_sounding(10.0, 1.0, 0.0, 0.0))
     assert np.allclose(np.array(5.2, dtype=np.float32), median_data.depth)
     data = [d.depth for d in cb.queue.get_data()]
     assert np.allclose(
-        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
     )
 
     median_data = cube.cube_node_queue_insert(cb, cube.return_new_sounding(10.0, 1.0, 0.0, 0.0))
     assert np.allclose(np.array(5.5, dtype=np.float32), median_data.depth)
     data = [d.depth for d in cb.queue.get_data()]
     assert np.allclose(
-        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
     )
 
     median_data = cube.cube_node_queue_insert(
@@ -330,7 +344,9 @@ def test_cube_node_queue_insert():
     )  # this outlier will trigger truncation
     assert np.allclose(np.array(10.0, dtype=np.float32), median_data.depth)
     data = [d.depth for d in cb.queue.get_data()]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
 
 
 def test_cube_node_insert():
@@ -370,9 +386,13 @@ def test_cube_node_insert():
     assert cb.hypotheses is None
 
     dpths = [d.depth for d in cb.queue.get_data()]
-    assert np.allclose(dpths, np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        dpths, np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
     varis = [d.variance for d in cb.queue.get_data()]
-    assert np.allclose(varis, np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), atol=0.01)
+    assert np.allclose(
+        varis, np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), atol=0.01
+    )
 
 
 def test_cube_node_extract_depth_uncertainty():
@@ -541,7 +561,9 @@ def test_run_cube_gridding_variants():
         assert d.shape == (4, 4)
 
     with pytest.raises(NotImplementedError):
-        cube.run_cube_gridding(z, thu, tvu, x, y, 4, 4, 100.0, 200.0, "unknown", "order1a", 1.0, 1.0)
+        cube.run_cube_gridding(
+            z, thu, tvu, x, y, 4, 4, 100.0, 200.0, "unknown", "order1a", 1.0, 1.0
+        )
 
 
 def test_numba_cube_py_funcs_coverage():
@@ -555,12 +577,16 @@ def test_numba_cube_py_funcs_coverage():
 
     # 2. CubeParameters py_func and constructor
     params = cube.return_default_cube_parameters.py_func("order1a", 1.0, 1.0)
-    cube.CubeParameters.class_type.methods["__init__"](params, "order1a", np.float32(1.0), np.float32(1.0))
+    cube.CubeParameters.class_type.methods["__init__"](
+        params, "order1a", np.float32(1.0), np.float32(1.0)
+    )
     params_large = cube.return_default_cube_parameters.py_func("order2", 20.0, 20.0)
     assert params_large.iho_fixed == 1.0
 
     # 3. Sounding py_func and constructor
-    snd = cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5))
+    snd = cube.return_new_sounding.py_func(
+        np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+    )
     cube.Sounding.class_type.methods["__init__"](
         snd, np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
     )
@@ -573,12 +599,22 @@ def test_numba_cube_py_funcs_coverage():
     hl_methods = cube.HypothesisList.class_type.methods
     hl = cube.HypothesisList(hyp, None)
     hl_methods["__init__"](hl, hyp, None)
-    hl2 = hl_methods["prepend"](hl, cube.return_new_hypothesis.py_func(np.float32(8.0), np.float32(0.5)))
+    hl2 = hl_methods["prepend"](
+        hl, cube.return_new_hypothesis.py_func(np.float32(8.0), np.float32(0.5))
+    )
     hl_methods["append"](hl2, cube.return_new_hypothesis.py_func(np.float32(12.0), np.float32(0.5)))
-    hl_methods["insert"](hl2, cube.return_new_hypothesis.py_func(np.float32(9.0), np.float32(0.5)), 1)
-    hl_methods["insert"](hl2, cube.return_new_hypothesis.py_func(np.float32(9.5), np.float32(0.5)), 2)
-    hl_methods["insert"](hl2, cube.return_new_hypothesis.py_func(np.float32(7.0), np.float32(0.5)), 0)
-    hl_methods["insert"](hl2, cube.return_new_hypothesis.py_func(np.float32(100.0), np.float32(0.5)), 999)
+    hl_methods["insert"](
+        hl2, cube.return_new_hypothesis.py_func(np.float32(9.0), np.float32(0.5)), 1
+    )
+    hl_methods["insert"](
+        hl2, cube.return_new_hypothesis.py_func(np.float32(9.5), np.float32(0.5)), 2
+    )
+    hl_methods["insert"](
+        hl2, cube.return_new_hypothesis.py_func(np.float32(7.0), np.float32(0.5)), 0
+    )
+    hl_methods["insert"](
+        hl2, cube.return_new_hypothesis.py_func(np.float32(100.0), np.float32(0.5)), 999
+    )
     hl_methods["remove"](hl2, 1)
     hl_methods["remove"](hl2, 0)
     hl_methods["remove"](hl2, 999)
@@ -615,29 +651,43 @@ def test_numba_cube_py_funcs_coverage():
     ql = cube.QueueList(snd, None)
     ql_methods["__init__"](ql, snd, None)
     ql2 = ql_methods["prepend"](
-        ql, cube.return_new_sounding.py_func(np.float32(8.0), np.float32(0.5), np.float32(0.5), np.float32(0.5))
+        ql,
+        cube.return_new_sounding.py_func(
+            np.float32(8.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
     )
     ql_methods["append"](
-        ql2, cube.return_new_sounding.py_func(np.float32(12.0), np.float32(0.5), np.float32(0.5), np.float32(0.5))
+        ql2,
+        cube.return_new_sounding.py_func(
+            np.float32(12.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
     )
     ql_methods["insert"](
         ql2,
-        cube.return_new_sounding.py_func(np.float32(9.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+        cube.return_new_sounding.py_func(
+            np.float32(9.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
         1,
     )
     ql_methods["insert"](
         ql2,
-        cube.return_new_sounding.py_func(np.float32(9.5), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+        cube.return_new_sounding.py_func(
+            np.float32(9.5), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
         2,
     )
     ql_methods["insert"](
         ql2,
-        cube.return_new_sounding.py_func(np.float32(7.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+        cube.return_new_sounding.py_func(
+            np.float32(7.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
         0,
     )
     ql_methods["insert"](
         ql2,
-        cube.return_new_sounding.py_func(np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+        cube.return_new_sounding.py_func(
+            np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+        ),
         999,
     )
     ql_methods["remove"](ql2, 1)
@@ -654,8 +704,12 @@ def test_numba_cube_py_funcs_coverage():
     cube.CubeNode.class_type.methods["__init__"](node)
 
     # 8. CubeGrid py_func and constructor
-    grid = cube.return_new_cubegrid.py_func(100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params)
-    cube.CubeGrid.class_type.methods["__init__"](grid, 100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params)
+    grid = cube.return_new_cubegrid.py_func(
+        100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params
+    )
+    cube.CubeGrid.class_type.methods["__init__"](
+        grid, 100.0, 200.0, 4, 4, np.float32(1.0), np.float32(1.0), params
+    )
 
     class MockHypoNoneItem:
         def __init__(self):
@@ -693,7 +747,10 @@ def test_numba_cube_py_funcs_coverage():
             self.min_context = p.min_context
             self.max_context = p.max_context
             self.no_data_value = np.float32(np.nan)
-            self.grid = [[cube.return_new_cubenode.py_func() for _ in range(num_columns)] for _ in range(num_rows)]
+            self.grid = [
+                [cube.return_new_cubenode.py_func() for _ in range(num_columns)]
+                for _ in range(num_rows)
+            ]
 
     # Run py_funcs with Debug=True and Debug=False
     for debug_mode in [False, True]:
@@ -705,7 +762,9 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_new_hypothesis.py_func(n_op, snd)
         cube.cube_node_new_hypothesis.py_func(
             n_op,
-            cube.return_new_sounding.py_func(np.float32(10.005), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.005), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         assert cube.cube_node_hypothesis_count.py_func(n_op) == 2
 
@@ -719,7 +778,9 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_get_nominated_depth_uncertainty.py_func(n_op)
 
         # nominate failure branches
-        assert not cube.cube_node_nominate_hypothesis.py_func(cube.return_new_cubenode.py_func(), np.float32(10.0))
+        assert not cube.cube_node_nominate_hypothesis.py_func(
+            cube.return_new_cubenode.py_func(), np.float32(10.0)
+        )
         assert not cube.cube_node_nominate_hypothesis.py_func(n_op, np.float32(999.0))
 
         n_mock_nom = MockNode()
@@ -729,18 +790,24 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_nominate_hypothesis.py_func(n_op, np.float32(10.0))
         cube.cube_node_remove_hypothesis.py_func(n_op, np.float32(10.0))
         cube.cube_node_remove_hypothesis.py_func(n_op, np.float32(99.0))
-        assert not cube.cube_node_remove_hypothesis.py_func(cube.return_new_cubenode.py_func(), np.float32(10.0))
+        assert not cube.cube_node_remove_hypothesis.py_func(
+            cube.return_new_cubenode.py_func(), np.float32(10.0)
+        )
 
         # remove middle hypothesis in 3-element list
         n_rem3 = cube.return_new_cubenode.py_func()
         cube.cube_node_new_hypothesis.py_func(n_rem3, snd)
         cube.cube_node_new_hypothesis.py_func(
             n_rem3,
-            cube.return_new_sounding.py_func(np.float32(15.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(15.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_rem3,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         assert cube.cube_node_remove_hypothesis.py_func(n_rem3, np.float32(15.0))
 
@@ -752,7 +819,9 @@ def test_numba_cube_py_funcs_coverage():
         # predicted depth
         cube.cube_node_set_preddepth.py_func(
             n_op,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # monitor hypothesis & reset monitor
@@ -761,7 +830,9 @@ def test_numba_cube_py_funcs_coverage():
         assert not cube.cube_node_reset_monitor.py_func(n_mon, 0)
         cube.cube_node_new_hypothesis.py_func(
             n_mon,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         assert not cube.cube_node_monitor_hypothesis.py_func(n_mon, 999, snd)
         assert not cube.cube_node_reset_monitor.py_func(n_mon, 999)
@@ -770,23 +841,31 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_monitor_hypothesis.py_func(
             n_mon,
             0,
-            cube.return_new_sounding.py_func(np.float32(9.8), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(9.8), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_monitor_hypothesis.py_func(
             n_mon,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_monitor_hypothesis.py_func(
             n_mon,
             0,
-            cube.return_new_sounding.py_func(np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_mon.hypotheses.data.cum_bayes_fac = 0.5
         cube.cube_node_monitor_hypothesis.py_func(
             n_mon,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         # Runlength threshold failure triggering lines 715-717
         n_mon.hypotheses.data.cum_bayes_fac = 0.5
@@ -795,7 +874,9 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_monitor_hypothesis.py_func(
             n_mon,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_reset_monitor.py_func(n_mon, 0)
 
@@ -804,50 +885,69 @@ def test_numba_cube_py_funcs_coverage():
         assert not cube.cube_node_update_hypothesis.py_func(n_upd, 0, snd)
         cube.cube_node_new_hypothesis.py_func(
             n_upd,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         assert not cube.cube_node_update_hypothesis.py_func(n_upd, 999, snd)
         assert not cube.cube_node_update_hypothesis.py_func(
             n_upd,
             0,
-            cube.return_new_sounding.py_func(np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_upd.variance_selection = "max"
         cube.cube_node_update_hypothesis.py_func(
             n_upd,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_upd.variance_selection = "input"
         cube.cube_node_update_hypothesis.py_func(
             n_upd,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_upd.variance_selection = "cube"
         cube.cube_node_update_hypothesis.py_func(
             n_upd,
             0,
-            cube.return_new_sounding.py_func(np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # best hypothesis index
-        assert cube.cube_node_best_hypothesis_index.py_func(cube.return_new_cubenode.py_func(), snd) == -1
+        assert (
+            cube.cube_node_best_hypothesis_index.py_func(cube.return_new_cubenode.py_func(), snd)
+            == -1
+        )
         cube.cube_node_best_hypothesis_index.py_func(n_upd, snd)
 
         # update node
         n_upd_node = cube.return_new_cubenode.py_func()
         cube.cube_node_update_node.py_func(
             n_upd_node,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_update_node.py_func(
             n_upd_node,
-            cube.return_new_sounding.py_func(np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.1), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_update_node.py_func(
             n_upd_node,
-            cube.return_new_sounding.py_func(np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # choose hypothesis
@@ -859,7 +959,9 @@ def test_numba_cube_py_funcs_coverage():
         n_choose_single = cube.return_new_cubenode.py_func()
         cube.cube_node_new_hypothesis.py_func(
             n_choose_single,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_choose_hypothesis.py_func(n_choose_single)
 
@@ -873,7 +975,9 @@ def test_numba_cube_py_funcs_coverage():
         for d_val in [4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8, 100.0]:
             cube.cube_node_queue_fill.py_func(
                 n_tr_full,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         n_tr_full.quotient_limit = 0.01
         cube.cube_node_truncate.py_func(n_tr_full)
@@ -885,14 +989,18 @@ def test_numba_cube_py_funcs_coverage():
         for d_val in [4.0, 5.0, 6.0, 7.0]:
             cube.cube_node_queue_fill.py_func(
                 n_fl_even,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         cube.cube_node_queue_flush_node.py_func(n_fl_even)
         n_fl_odd = cube.return_new_cubenode.py_func()
         for d_val in [4.0, 5.0, 6.0]:
             cube.cube_node_queue_fill.py_func(
                 n_fl_odd,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         cube.cube_node_queue_flush_node.py_func(n_fl_odd)
 
@@ -900,19 +1008,27 @@ def test_numba_cube_py_funcs_coverage():
         n_qf = cube.return_new_cubenode.py_func()
         cube.cube_node_queue_fill.py_func(
             n_qf,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_queue_fill.py_func(
             n_qf,
-            cube.return_new_sounding.py_func(np.float32(5.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(5.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_queue_fill.py_func(
             n_qf,
-            cube.return_new_sounding.py_func(np.float32(15.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(15.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_queue_fill.py_func(
             n_qf,
-            cube.return_new_sounding.py_func(np.float32(8.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(8.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # queue insert
@@ -920,30 +1036,42 @@ def test_numba_cube_py_funcs_coverage():
         for d_val in [4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]:
             cube.cube_node_queue_fill.py_func(
                 n_qi,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         cube.cube_node_queue_insert.py_func(
             n_qi,
-            cube.return_new_sounding.py_func(np.float32(6.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(6.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_queue_insert.py_func(
             n_qi,
-            cube.return_new_sounding.py_func(np.float32(1.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(1.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_queue_insert.py_func(
             n_qi,
-            cube.return_new_sounding.py_func(np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(100.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         n_qi_overlap = cube.return_new_cubenode.py_func()
         for d_val in [10.0, 10.01, 10.02, 10.03, 10.04, 10.05, 10.06, 10.07, 10.08, 10.09, 10.10]:
             cube.cube_node_queue_fill.py_func(
                 n_qi_overlap,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         cube.cube_node_queue_insert.py_func(
             n_qi_overlap,
-            cube.return_new_sounding.py_func(np.float32(10.05), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.05), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # add_to_queue
@@ -953,11 +1081,15 @@ def test_numba_cube_py_funcs_coverage():
         for d_val in [4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7]:
             cube.cube_node_add_to_queue.py_func(
                 n_atq,
-                cube.return_new_sounding.py_func(np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+                cube.return_new_sounding.py_func(
+                    np.float32(d_val), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+                ),
             )
         cube.cube_node_add_to_queue.py_func(
             n_atq,
-            cube.return_new_sounding.py_func(np.float32(12.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(12.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
 
         # insert filtering branches
@@ -972,19 +1104,25 @@ def test_numba_cube_py_funcs_coverage():
         # blunder reject
         cube.cube_node_insert.py_func(
             n_ins,
-            cube.return_new_sounding.py_func(np.float32(2.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(2.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
             np.float32(0.25),
         )
         # blunder pass, distance reject (lines 1182->1190, 1192-1194)
         cube.cube_node_insert.py_func(
             n_ins,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
             np.float32(10000.0),
         )
         # blunder pass, distance accepted
         cube.cube_node_insert.py_func(
             n_ins,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
             np.float32(0.01),
         )
         n_ins.capture_dist_scale = np.float32(0.01)
@@ -1016,18 +1154,28 @@ def test_numba_cube_py_funcs_coverage():
         cube.cube_node_extract_depth_uncertainty.py_func(n_ext)
         cube.cube_node_new_hypothesis.py_func(
             n_ext,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_extract_depth_uncertainty.py_func(n_ext)
         cube.cube_node_nominate_hypothesis.py_func(n_ext, np.float32(10.0))
         cube.cube_node_extract_depth_uncertainty.py_func(n_ext)
 
         # extract closest & posterior
-        cube.cube_node_extract_closest_depth_uncertainty.py_func(n_ext, np.float32(10.0), np.float32(0.5))
-        cube.cube_node_extract_posterior_depth_uncertainty.py_func(n_ext, np.float32(10.0), np.float32(0.5))
+        cube.cube_node_extract_closest_depth_uncertainty.py_func(
+            n_ext, np.float32(10.0), np.float32(0.5)
+        )
+        cube.cube_node_extract_posterior_depth_uncertainty.py_func(
+            n_ext, np.float32(10.0), np.float32(0.5)
+        )
         n_ext.nominated = None
-        cube.cube_node_extract_closest_depth_uncertainty.py_func(n_ext, np.float32(10.0), np.float32(0.5))
-        cube.cube_node_extract_posterior_depth_uncertainty.py_func(n_ext, np.float32(10.0), np.float32(0.5))
+        cube.cube_node_extract_closest_depth_uncertainty.py_func(
+            n_ext, np.float32(10.0), np.float32(0.5)
+        )
+        cube.cube_node_extract_posterior_depth_uncertainty.py_func(
+            n_ext, np.float32(10.0), np.float32(0.5)
+        )
 
         n_all_z = cube.return_new_cubenode.py_func()
         hz1 = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
@@ -1035,8 +1183,12 @@ def test_numba_cube_py_funcs_coverage():
         hz2 = cube.return_new_hypothesis.py_func(np.float32(20.0), np.float32(0.5))
         hz2.number_of_samples = 0
         n_all_z.hypotheses = cube.HypothesisList(hz1, cube.HypothesisList(hz2, None))
-        cube.cube_node_extract_closest_depth_uncertainty.py_func(n_all_z, np.float32(10.0), np.float32(0.5))
-        cube.cube_node_extract_posterior_depth_uncertainty.py_func(n_all_z, np.float32(10.0), np.float32(0.5))
+        cube.cube_node_extract_closest_depth_uncertainty.py_func(
+            n_all_z, np.float32(10.0), np.float32(0.5)
+        )
+        cube.cube_node_extract_posterior_depth_uncertainty.py_func(
+            n_all_z, np.float32(10.0), np.float32(0.5)
+        )
 
         # Grid insertion & extraction
         grid_test = MockGrid(5, 5, params)
@@ -1058,16 +1210,22 @@ def test_numba_cube_py_funcs_coverage():
         n_m = grid_search.grid[2][2]
         cube.cube_node_new_hypothesis.py_func(
             n_m,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_m,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_s_row = grid_search.grid[2][3]
         cube.cube_node_new_hypothesis.py_func(
             n_s_row,
-            cube.return_new_sounding.py_func(np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_grid_extract_data.py_func(grid_search, "local")
         cube.cube_grid_extract_data.py_func(grid_search, "posterior")
@@ -1078,18 +1236,24 @@ def test_numba_cube_py_funcs_coverage():
         n_m_col.predicted_variance = np.float32(0.5)
         cube.cube_node_new_hypothesis.py_func(
             n_m_col,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_m_col,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_s_col = grid_search_col.grid[1][3]
         n_s_col.predicted_depth = np.float32(10.0)
         n_s_col.predicted_variance = np.float32(0.5)
         cube.cube_node_new_hypothesis.py_func(
             n_s_col,
-            cube.return_new_sounding.py_func(np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.2), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_grid_extract_data.py_func(grid_search_col, "local")
         cube.cube_grid_extract_data.py_func(grid_search_col, "posterior")
@@ -1103,20 +1267,28 @@ def test_numba_cube_py_funcs_coverage():
         n_c0 = grid_corner.grid[0][0]
         cube.cube_node_new_hypothesis.py_func(
             n_c0,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_c0,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_c2 = grid_corner.grid[2][2]
         cube.cube_node_new_hypothesis.py_func(
             n_c2,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_c2,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_grid_extract_data.py_func(grid_corner, "local")
 
@@ -1127,11 +1299,15 @@ def test_numba_cube_py_funcs_coverage():
         n_no_ctx = grid_no_ctx.grid[1][1]
         cube.cube_node_new_hypothesis.py_func(
             n_no_ctx,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_no_ctx,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_grid_extract_data.py_func(grid_no_ctx, "local")
 
@@ -1139,11 +1315,15 @@ def test_numba_cube_py_funcs_coverage():
         n_m_nan = grid_search_nan.grid[2][2]
         cube.cube_node_new_hypothesis.py_func(
             n_m_nan,
-            cube.return_new_sounding.py_func(np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(10.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         cube.cube_node_new_hypothesis.py_func(
             n_m_nan,
-            cube.return_new_sounding.py_func(np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)),
+            cube.return_new_sounding.py_func(
+                np.float32(20.0), np.float32(0.5), np.float32(0.5), np.float32(0.5)
+            ),
         )
         n_nan = grid_search_nan.grid[2][3]
         h_nan = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
@@ -1156,7 +1336,9 @@ def test_numba_cube_py_funcs_coverage():
         orig_insert = cube.cube_grid_insert_points
         orig_extract = cube.cube_grid_extract_data
         try:
-            cube.return_new_cubegrid = lambda me, mn, nc_cols, nr, rx, ry, p: MockGrid(nr, nc_cols, p)
+            cube.return_new_cubegrid = lambda me, mn, nc_cols, nr, rx, ry, p: MockGrid(
+                nr, nc_cols, p
+            )
             cube.cube_grid_insert_points = lambda *args: None
             cube.cube_grid_extract_data = lambda cg, m: (
                 np.zeros((1, 1)),

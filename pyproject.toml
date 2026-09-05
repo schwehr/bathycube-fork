@@ -48,7 +48,7 @@ url = "https://pypi.org/simple"
 default = true
 
 [tool.ruff]
-line-length = 120
+line-length = 100
 
 [tool.ruff.lint]
 ignore = [

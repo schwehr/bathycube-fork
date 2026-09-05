@@ -113,7 +113,9 @@ def test_cube_node_monitor_hypothesis():
     cb.add_hypothesis(5.0, 0.5)
     assert not cb.monitor_hypothesis(0, 10.0, 1.0)
     assert cb.monitor_hypothesis(0, 8.0, 1.0)  # no intervention required
-    assert not cb.monitor_hypothesis(0, 8.0, 1.0)  # second monitor and the cum bayes fac is less than the threshold
+    assert not cb.monitor_hypothesis(
+        0, 8.0, 1.0
+    )  # second monitor and the cum bayes fac is less than the threshold
 
 
 def test_cube_node_reset_monitor():
@@ -273,26 +275,36 @@ def test_cube_node_queue_insert():
     cb.add_to_queue(4.5, 1.0)
     cb.add_to_queue(16.8, 1.0)
     data = [d[0] for d in cb.queue]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
+    )
 
     median_data = cb.queue_insert(10.0, 1.0)
     assert np.allclose(np.array(5.2, dtype=np.float32), median_data[0])
     data = [d[0] for d in cb.queue]
     assert np.allclose(
-        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.5, 10.0, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
     )
 
     median_data = cb.queue_insert(10.0, 1.0)
     assert np.allclose(np.array(5.5, dtype=np.float32), median_data[0])
     data = [d[0] for d in cb.queue]
     assert np.allclose(
-        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+        np.array(data),
+        np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 10.0, 16.7, 16.8, 17.7, 17.8]),
+        atol=0.01,
     )
 
     median_data = cb.queue_insert(100.0, 1.0)  # this outlier will trigger truncation
     assert np.allclose(np.array(10.0, dtype=np.float32), median_data[0])
     data = [d[0] for d in cb.queue]
-    assert np.allclose(np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        np.array(data), np.array([4.0, 4.2, 4.4, 4.5, 5.0, 10.0, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
 
 
 def test_cube_add_point_to_node():
@@ -328,9 +340,13 @@ def test_cube_add_point_to_node():
     assert not cb.hypotheses
 
     dpths = [d[0] for d in cb.queue]
-    assert np.allclose(dpths, np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
+    assert np.allclose(
+        dpths, np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01
+    )
     varis = [d[1] for d in cb.queue]
-    assert np.allclose(varis, np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), atol=0.01)
+    assert np.allclose(
+        varis, np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), atol=0.01
+    )
 
 
 def test_cube_node_extract_depth_uncertainty():
@@ -528,7 +544,9 @@ def test_cube_node_additional_branches():
     cb.dump_hypotheses()
 
     # Extract answer from null hypothesis
-    ans = cb._return_answer_from_hypothesis(cb.hypotheses[0], 1.0, ("depth", "uncertainty", "ratio", "n_hypotheses"))
+    ans = cb._return_answer_from_hypothesis(
+        cb.hypotheses[0], 1.0, ("depth", "uncertainty", "ratio", "n_hypotheses")
+    )
     assert np.isnan(ans[0])
     assert np.isnan(ans[1])
 
@@ -649,7 +667,9 @@ def test_cube_grid_and_gridding(tmp_path):
     d, _, _, _, _ = grid._validate_insert_points(10.0, 0.5, 0.5, 101.5, 198.5)
     assert isinstance(d, np.ndarray) and len(d) == 1
 
-    d, _, _, _, _ = grid._validate_insert_points([10.0, 11.0], [0.5, 0.5], [0.5, 0.5], [101.5, 102.5], [198.5, 197.5])
+    d, _, _, _, _ = grid._validate_insert_points(
+        [10.0, 11.0], [0.5, 0.5], [0.5, 0.5], [101.5, 102.5], [198.5, 197.5]
+    )
     assert len(d) == 2
 
     with pytest.raises(AssertionError):
@@ -890,12 +910,16 @@ def test_cube_node_return_answers_coverage():
     h.variance_estimate = 0.5
     for var_sel in ["max", "input", "cube"]:
         cb.variance_selection = var_sel
-        ans = cb._return_answer_from_hypothesis(h, 0.5, ("depth", "uncertainty", "ratio", "n_hypotheses", "unknown"))
+        ans = cb._return_answer_from_hypothesis(
+            h, 0.5, ("depth", "uncertainty", "ratio", "n_hypotheses", "unknown")
+        )
         assert len(ans) == 4
 
     h_empty = cube.Hypothesis(10.0, 0.5)
     h_empty.number_of_points = 0
-    ans_empty = cb._return_answer_from_hypothesis(h_empty, 0.0, ("depth", "uncertainty", "ratio", "n_hypotheses"))
+    ans_empty = cb._return_answer_from_hypothesis(
+        h_empty, 0.0, ("depth", "uncertainty", "ratio", "n_hypotheses")
+    )
     assert all(np.isnan(x) for x in ans_empty)
 
 
@@ -928,10 +952,18 @@ def test_cube_grid_insert_points_max_radius():
         use_queue=False,
     )
     # Deep sounding with small horizontal uncertainty to hit radius > max_radius (line 1350)
-    grid.insert_points(np.array([1000.0]), np.array([0.0001]), np.array([0.5]), np.array([101.5]), np.array([198.5]))
+    grid.insert_points(
+        np.array([1000.0]),
+        np.array([0.0001]),
+        np.array([0.5]),
+        np.array([101.5]),
+        np.array([198.5]),
+    )
 
     # Sounding with 0.0 <= radius <= max_radius to hit line 1350->1352 fall-through
-    grid.insert_points(np.array([10.0]), np.array([0.04137]), np.array([1.0]), np.array([101.5]), np.array([198.5]))
+    grid.insert_points(
+        np.array([10.0]), np.array([0.04137]), np.array([1.0]), np.array([101.5]), np.array([198.5])
+    )
 
 
 def test_cube_grid_boundary_context_searches():
