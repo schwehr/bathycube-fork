@@ -41,7 +41,7 @@ repos:
     rev: 1.0.0
     hooks:
       - id: mdformat
-        args: ["--wrap", "80"]
+        args: ["--wrap", "100"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
