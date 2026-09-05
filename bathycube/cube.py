@@ -477,10 +477,7 @@ class CubeNode:
             if there is a nominated hypothesis, return True
         """
 
-        if self.nominated is not None:
-            return True
-        else:
-            return False
+        return self.nominated is not None
 
     def monitor_hypothesis(self, hypo_index: int, new_depth: float, new_variance: float):
         """

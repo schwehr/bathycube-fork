@@ -102,7 +102,6 @@ disable = [
     "protected-access",
     "raise-missing-from",
     "redefined-outer-name",
-    "simplifiable-if-statement",
     "too-few-public-methods",
     "too-many-arguments",
     "too-many-branches",
