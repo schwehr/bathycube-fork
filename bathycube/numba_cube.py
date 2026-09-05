@@ -1705,7 +1705,7 @@ def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
         for col in range(cg.num_columns):
             node = cg.grid[row][col]
             hypcnt = cube_node_hypothesis_count(node)
-            if method == "local" or method == "posterior":
+            if method in ("local", "posterior"):
                 if hypcnt <= 1:
                     depth, uncertainty, ratio = cube_node_extract_depth_uncertainty(node)
                 else:
