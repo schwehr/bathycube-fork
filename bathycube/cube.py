@@ -756,8 +756,7 @@ class CubeNode:
 
         # run the list computing quotients, gather indices for the outliers
         outlier_index = []
-        for idx in range(len(self.queue)):
-            depth = self.queue[idx][0]
+        for idx, (depth, _) in enumerate(self.queue):
             diff_sq = (depth - mean) ** 2
             quot = diff_sq / (sum_square_diff_k - (diff_sq / (num_points - 1)))
             if quot >= self.quotient_limit:
@@ -827,8 +826,7 @@ class CubeNode:
             self.queue.append([depth, variance])
         else:
             insertion_index = None
-            for i in range(len(self.queue)):
-                q_dpth = self.queue[i][0]
+            for i, (q_dpth, _) in enumerate(self.queue):
                 if depth > q_dpth:
                     insertion_index = i + 1
                 else:
@@ -1501,13 +1499,13 @@ class CubeGrid:
         conf_95_percent = 1.96
         conf_99_percent = 2.95
         self.logger.log(logging.DEBUG, f"insert_points: Adding {len(depth)} points...")
-        for i in range(len(depth)):
+        for i, z in enumerate(depth):
             self.logger.log(
                 logging.DEBUG,
-                f"insert_points: x:{easting[i]}, y:{northing[i]}, z:{depth[i]}, thu:{horizontal_uncertainty[i]}, tvu:{vertical_uncertainty[i]}",
+                f"insert_points: x:{easting[i]}, y:{northing[i]}, z:{z}, thu:{horizontal_uncertainty[i]}, tvu:{vertical_uncertainty[i]}",
             )
             # Determine IHO S-44 derived limits on maximum variance
-            max_variance_allowed = (self.iho_fixed + self.iho_percent * depth[i] ** 2) / conf_95_percent**2
+            max_variance_allowed = (self.iho_fixed + self.iho_percent * z**2) / conf_95_percent**2
             ratio = max_variance_allowed / vertical_uncertainty[i]
             if ratio <= 2.0:
                 ratio = 2.0
@@ -1558,7 +1556,7 @@ class CubeGrid:
                         continue  # distance to great, not including this point in this node
                     self.logger.log(logging.DEBUG, f"insert_points: adding point to node at row/col, ({y}, {x})")
                     self.grid[y][x].add_point_to_node(
-                        depth[i], vertical_uncertainty[i], horizontal_uncertainty[i], distance_sq
+                        z, vertical_uncertainty[i], horizontal_uncertainty[i], distance_sq
                     )
 
     def flush_node_queues(self):
