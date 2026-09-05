@@ -1,9 +1,11 @@
-"""
-Python implementation of the CUBE module, Combined Uncertainty and Bathymetry Estimator.  Python implementation done
-by Eric Younkin, Feb 2022.
+"""Combined Uncertainty and Bathymetry Estimator (CUBE) module.
 
-CUBE was developed as a research project within the Center of for Coastal and Ocean Mapping and NOAA/UNH Joint Hydrographic
-Center (CCOM/JHC) at the University of New Hampshire, starting in the fall of 2000.
+Python implementation of the CUBE module, Combined Uncertainty and Bathymetry
+Estimator, done by Eric Younkin, Feb 2022.
+
+CUBE was developed as a research project within the Center for Coastal and
+Ocean Mapping and NOAA/UNH Joint Hydrographic Center (CCOM/JHC) at the
+University of New Hampshire, starting in the fall of 2000.
 """
 
 import json
@@ -16,39 +18,33 @@ import numpy as np
 
 
 class StdErrFilter(logging.Filter):
-    """
-    filter out messages that are not CRITICAL or ERROR or WARNING
-    """
+    """Filter out messages that are not CRITICAL, ERROR, or WARNING."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         return record.levelno in (logging.CRITICAL, logging.ERROR, logging.WARNING)
 
 
 class StdOutFilter(logging.Filter):
-    """
-    filter out messages that are not DEBUG or INFO
-    """
+    """Filter out messages that are not DEBUG or INFO."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         return record.levelno in (logging.DEBUG, logging.INFO)
 
 
 def return_logger(logfile: str | None = None, loglevel: int = logging.INFO) -> logging.Logger:
-    """If logfile is included, use file handler is to log to a file.
+    """Configure and return a logger instance for CUBE logging.
 
-    Disable the root logger by clearing out it's handlers because it always gets a default stderr
-    log handler that ends up duplicating messages.
+    If logfile is included, use file handler to log to a file. Disables the
+    root logger by clearing out its handlers because it always gets a default
+    stderr log handler that ends up duplicating messages.
 
-    Parameters
-    ----------
-    logfile
-        path to the log file where you want the output driven to, if None, will not log to file
-    loglevel
-        logging level to use
+    Args:
+        logfile: Path to the log file where you want the output driven to. If
+            None, will not log to file.
+        loglevel: Logging level to use.
 
-    Returns
-    -------
-    logger: logging.Logger instance for the provided name/logfile
+    Returns:
+        logging.Logger instance for the provided name/logfile.
     """
 
     fmat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -79,21 +75,19 @@ def return_logger(logfile: str | None = None, loglevel: int = logging.INFO) -> l
 
 
 def get_iho_limits(iho_order: str) -> tuple[float, float]:
-    """
-    Get fixed and variable Total Vertical Uncertainty components for the different IHO Order categories, see S-44
-    Table 1 - Minimum Bathymetry Standards for Safety of Navigation Hydrographic Surveys
+    """Get fixed and variable TVU components for IHO Order categories.
 
-    Parameters
-    ----------
-    iho_order
-        string representation of one of the IHO order categories, i.e. 'special' or 'order1a'
+    See S-44 Table 1 - Minimum Bathymetry Standards for Safety of Navigation
+    Hydrographic Surveys.
 
-    Returns
-    -------
-    float
-        'a' component, the fixed component of the TVU equation
-    float
-        'b' component, the variable component of the TVU equation
+    Args:
+        iho_order: String representation of one of the IHO order categories,
+            e.g. 'special' or 'order1a'.
+
+    Returns:
+        Tuple containing:
+            - 'a' component, the fixed component of the TVU equation.
+            - 'b' component, the variable component of the TVU equation.
     """
     if iho_order == "exclusive":
         return 0.15, 0.0075
@@ -149,16 +143,15 @@ class CubeParameters:
         self.variance_selection = "cube"
 
     def _get_iho_limits(self):
-        """
-        Get fixed and variable Total Vertical Uncertainty components for the different IHO Order categories, see S-44
-        Table 1 - Minimum Bathymetry Standards for Safety of Navigation Hydrographic Surveys
+        """Get fixed and variable TVU components for IHO Order categories.
 
-        Returns
-        -------
-        float
-            'a' component, the fixed component of the TVU equation
-        float
-            'b' component, the variable component of the TVU equation
+        See S-44 Table 1 - Minimum Bathymetry Standards for Safety of
+        Navigation Hydrographic Surveys.
+
+        Returns:
+            Tuple containing:
+                - 'a' component, the fixed component of the TVU equation.
+                - 'b' component, the variable component of the TVU equation.
         """
         return get_iho_limits(self.iho_order)
 
@@ -168,21 +161,12 @@ class CubeParameters:
         grid_resolution_x: float = 1.0,
         grid_resolution_y: float = 1.0,
     ):
-        """
-        Build the situational parameters now, those related to IHO order or grid resolution.
+        """Build situational parameters related to IHO order or grid resolution.
 
-        Parameters
-        ----------
-        iho_order
-            one of the IHO order string identifiers, i.e. 'order1a'
-        grid_resolution_x
-            size of the grid cell in the x/easting direction
-        grid_resolution_y
-            size of the grid cell in the y/northing direction
-
-        Returns
-        -------
-
+        Args:
+            iho_order: One of the IHO order string identifiers, e.g. 'order1a'.
+            grid_resolution_x: Size of the grid cell in the x/easting direction.
+            grid_resolution_y: Size of the grid cell in the y/northing direction.
         """
         self.iho_order = iho_order
         self.grid_resolution_x = grid_resolution_x
@@ -243,10 +227,10 @@ class Hypothesis:
 
 
 class CubeNode:
-    """
-    CubeNode - The primary estimation structural element.  This maintains the median pre-
-    filter queue, the linked list of depth hypotheses, and the sample statistics
-    for a single node.
+    """The primary estimation structural element.
+
+    Maintains the median pre-filter queue, the linked list of depth
+    hypotheses, and the sample statistics for a single node.
     """
 
     def __init__(
@@ -271,58 +255,57 @@ class CubeNode:
         use_queue: bool = True,
         logger: logging.Logger = logging.getLogger(),
     ):
-        """
-        These default arguments are used or otherwise driven from the CubeParams class
+        """Initialize a CubeNode instance.
 
-        Parameters
-        ----------
-        depth_tolerance
-            the maximum difference allowed when searching hypotheses by depth
-        bayes_factor_threshold
-            Bayes factor threshold for either a single estimate, or the worst case recent sequence to warrant an
-            intervention, Set by West & Harrison's method of significant evidence for M_1
-        est_offset
-            Threshold for significant offset from current estimate to warrant an intervention, Set by West & Harrison's
-            method of significant percentage points.
-        runlength_threshold
-            Run length threshold for worst case recent sequence to indicate a drift failure and hence to warrant an
-            intervention, Ball-park figure following West & Harrison's method
-        discount
-            Discount factor for evolution noise variance
-        quotient_limit
-            Outlier quotient upper allowable limit, Approx. 0.1% F(1,6).  From CUBE User Manual - With the released
-            multiple-hypothesis version of CUBE this parameter is no longer necessary, and could, if set inappropriately
-            low, eliminate valid soundings from consideration. It is now a dangerous parameter, rather than a useful one.
-            Hence it should always either be set to its maximum value of 255, or else removed as a user-accessible parameter.
-        max_hypothesis_ratio
-            ceiling to place on hypothesis strength ratios
-        median_length
-            Length of median pre-filter sort queue (must be odd number for algorithm)
-        blunder_min
-            Minimum depth difference from pred.depth to consider a blunder
-        blunder_percent
-            Percentage of predicted depth to be considered a blunder, if more than the minimum (0 < p < 1, typ.0.25)
-        blunder_scalar
-            Scale on initialisation surface std. dev. at a node to allow before considering deep spikes to be blunders
-        capture_dist_scale
-            Scale on predicted or estimated depth for how far out to accept data. (unitless; typically 0.05 for hydrography
-            but can be greater for geological mapping in flat areas with sparse data)
-        var_scale
-            variance scale dilution factor
-        dist_exponent
-            exponent on distance for variance scale
-        stddev_to_conf_scale
-            Scale from Std.Dev.to CI, 95 percent CI is the default
-        no_data_value
-            Value used to indicate no data
-        variance_selection
-            controls the reported variance, one of 'cube' to use CUBE's posterior variance estimate, 'input' to track and
-            use input sample variance, and 'max' to report the greater of the two
-        use_queue
-            Executes the 'Reordering' step, see CUBE User Manual 3.1.  With this set to False, this step is skipped.
-            User Manual states that with multiple hypothesis implementation of CUBE, Reordering is no longer necessary.
-        logger
-            logger instance for debug messaging
+        These default arguments are used or otherwise driven from the
+        CubeParameters class.
+
+        Args:
+            depth_tolerance: The maximum difference allowed when searching
+                hypotheses by depth.
+            bayes_factor_threshold: Bayes factor threshold for either a single
+                estimate, or the worst case recent sequence to warrant an
+                intervention. Set by West & Harrison's method of significant
+                evidence for M_1.
+            est_offset: Threshold for significant offset from current estimate
+                to warrant an intervention. Set by West & Harrison's method of
+                significant percentage points.
+            runlength_threshold: Run length threshold for worst case recent
+                sequence to indicate a drift failure and hence to warrant an
+                intervention. Ball-park figure following West & Harrison's
+                method.
+            discount: Discount factor for evolution noise variance.
+            quotient_limit: Outlier quotient upper allowable limit, approx.
+                0.1% F(1,6). From CUBE User Manual - with the released
+                multiple-hypothesis version of CUBE this parameter is no longer
+                necessary, and could, if set inappropriately low, eliminate
+                valid soundings from consideration.
+            max_hypothesis_ratio: Ceiling to place on hypothesis strength
+                ratios.
+            median_length: Length of median pre-filter sort queue (must be an
+                odd number for algorithm).
+            blunder_min: Minimum depth difference from predicted depth to
+                consider a blunder.
+            blunder_percent: Percentage of predicted depth to be considered a
+                blunder, if more than the minimum (0 < p < 1, typically 0.25).
+            blunder_scalar: Scale on initialisation surface std. dev. at a node
+                to allow before considering deep spikes to be blunders.
+            capture_dist_scale: Scale on predicted or estimated depth for how
+                far out to accept data (unitless; typically 0.05 for hydrography
+                but can be greater for geological mapping in flat areas with
+                sparse data).
+            var_scale: Variance scale dilution factor.
+            dist_exponent: Exponent on distance for variance scale.
+            stddev_to_conf_scale: Scale from standard deviation to confidence
+                interval; 95% CI is the default.
+            no_data_value: Value used to indicate no data.
+            variance_selection: Controls the reported variance; one of 'cube'
+                to use CUBE's posterior variance estimate, 'input' to track and
+                use input sample variance, and 'max' to report the greater of
+                the two.
+            use_queue: Executes the 'Reordering' step, see CUBE User Manual 3.1.
+                With this set to False, this step is skipped.
+            logger: Logger instance for debug messaging.
         """
 
         self.queue = []
@@ -370,17 +353,13 @@ class CubeNode:
         self._pred_var = new_variance
 
     def add_hypothesis(self, depth: float, variance: float, null_hypothesis: bool = False):
-        """
-        Add a specific depth hypothesis to the current list
+        """Add a specific depth hypothesis to the current list.
 
-        Parameters
-        ----------
-        depth
-            depth to set for the hypothesis
-        variance
-            variance to set for the hypothesis
-        null_hypothesis
-            if True, this is a null hypothesis, which is a specific hypothesis that has the number of points set to zero
+        Args:
+            depth: Depth to set for the hypothesis.
+            variance: Variance to set for the hypothesis.
+            null_hypothesis: If True, this is a null hypothesis, which is a
+                specific hypothesis that has the number of points set to zero.
         """
 
         new_hypo = Hypothesis(depth, variance)
@@ -394,16 +373,16 @@ class CubeNode:
         self.hypotheses.append(new_hypo)
 
     def remove_hypothesis(self, depth: float):
-        """
-        This removes a hypothesis from a CubeNode permanently.  The hypothesis to remove is determined by the depth
-        provided.  The algorithm allows up to self.depth_tolerance difference between this depth and the depth in the
-        hypothesis, but will only remove the hypothesis if there is a unique match to the depth.  Tolerance is nominally
-        a metric whisker (slightly smaller than the imperial), or 0.01m.
+        """Remove a hypothesis from a CubeNode permanently.
 
-        Parameters
-        ----------
-        depth
-            the depth of the hypothesis to remove
+        The hypothesis to remove is determined by the depth provided. The
+        algorithm allows up to self.depth_tolerance difference between this depth
+        and the depth in the hypothesis, but will only remove the hypothesis if
+        there is a unique match to the depth. Tolerance is nominally a metric
+        whisker (slightly smaller than the imperial), or 0.01m.
+
+        Args:
+            depth: The depth of the hypothesis to remove.
         """
 
         hypo_idx = [
@@ -434,17 +413,18 @@ class CubeNode:
             )
 
     def nominate_hypothesis(self, depth: float):
-        """
-        This searches the list of hypotheses for one with depth within a whisker of the specified value --- in this
-        case, a metric whisker, which is the same as 0.01m.  The hypothesis that matches, or the one that minimises
-        the distance if there is more than one, is marked as 'nominated', and is reconstructed every time without
-        running the disam. engine until the user explicitly resets the over-ride (with cube_node_reset_nomination) or
-        more data is added to the node.
+        """Nominate a hypothesis within a whisker of the specified depth.
 
-        Parameters
-        ----------
-        depth
-            depth of the hypothesis that we want to preserve by nominating
+        Searches the list of hypotheses for one with depth within a whisker
+        (0.01m) of the specified value. The hypothesis that matches, or the
+        one that minimizes the distance if there is more than one, is marked
+        as 'nominated', and is reconstructed every time without running the
+        disambiguation engine until the user explicitly resets the override
+        or more data is added to the node.
+
+        Args:
+            depth: Depth of the hypothesis that we want to preserve by
+                nominating.
         """
 
         min_depth_distance = None
@@ -476,44 +456,35 @@ class CubeNode:
             )
 
     def clear_nomination(self):
-        """
-        Remove the reference to the nominated hypothesis
-        """
+        """Remove the reference to the nominated hypothesis."""
 
         self.nominated = None
         self.logger.log(logging.DEBUG, "clear_nomination: remove nominated hypothesis")
 
     def has_nomination(self):
-        """
-        Return True if there is a nominated hypothesis
+        """Return True if there is a nominated hypothesis.
 
-        Returns
-        -------
-        bool
-            if there is a nominated hypothesis, return True
+        Returns:
+            True if there is a nominated hypothesis, False otherwise.
         """
 
         return self.nominated is not None
 
     def monitor_hypothesis(self, hypo_index: int, new_depth: float, new_variance: float):
-        """
-        Compute West % Harrison's monitoring statistics for the node hypothesis.  Depends on self.est_offset (the offset
-        we consider to be significant), self.bayes_factor_threshold (the Bayes factor threshold before intervention) and
-        self.runlength_threshold (Number of bad factors to indicate sequence failure).
+        """Compute West & Harrison's monitoring statistics for node hypothesis.
 
-        Parameters
-        ----------
-        hypo_index
-            The index of the hypothesis we want to monitor
-        new_depth
-            new input sample which is about to be incorporated
-        new_variance
-            observation noise variance
+        Depends on self.est_offset (the offset we consider to be significant),
+        self.bayes_factor_threshold (the Bayes factor threshold before
+        intervention), and self.runlength_threshold (number of bad factors to
+        indicate sequence failure).
 
-        Returns
-        -------
-        bool
-            False if an intervention is required
+        Args:
+            hypo_index: The index of the hypothesis we want to monitor.
+            new_depth: New input sample which is about to be incorporated.
+            new_variance: Observation noise variance.
+
+        Returns:
+            False if an intervention is required, True otherwise.
         """
 
         try:
@@ -567,13 +538,11 @@ class CubeNode:
         return True
 
     def reset_monitor(self, hypo_index: int):
-        """
-        Clear the monitoring data from the provided hypothesis
+        """Clear the monitoring data from the provided hypothesis.
 
-        Parameters
-        ----------
-        hypo_index
-            The index of the hypothesis we want to clear the monitor data from
+        Args:
+            hypo_index: The index of the hypothesis we want to clear the monitor
+                data from.
         """
 
         try:
@@ -591,28 +560,25 @@ class CubeNode:
         )
 
     def update_hypothesis(self, hypo_index: int, depth: float, variance: float):
-        """
-        Update the given hypothesis (index is provided) being tracked at this node.  This implements the standard
-        univariate dynamic linear model update equations (West & Harrison, 'Bayesian Forecasting and Dynamic Models',
-        Springer, 2ed, 1997, Ch. 2), along with the Bayes factor monitoring code (W&H, Ch. 11).  The only failure mode
-        possible with this code is if the input data would cause an intervention to be requested on the current track.
-        In this case, it is the caller's responsibility to utilise the data point, since it will not be incorporated
-        into the hypothesis --- typically this would mean adding a new hypothesis and pushing it onto the stack.
+        """Update the given hypothesis being tracked at this node.
 
-        Parameters
-        ----------
-        hypo_index
-            The index of the hypothesis we want to update
-        depth
-            estimate of depth
-        variance
-            estimate of variance
+        Implements the standard univariate dynamic linear model update
+        equations (West & Harrison, 'Bayesian Forecasting and Dynamic Models',
+        Springer, 2ed, 1997, Ch. 2), along with the Bayes factor monitoring
+        code (W&H, Ch. 11). The only failure mode possible with this code is
+        if the input data would cause an intervention to be requested on the
+        current track. In this case, it is the caller's responsibility to
+        utilize the data point, since it will not be incorporated into the
+        hypothesis.
 
-        Returns
-        -------
-        bool
-            Returns False if the estimate does not really match the track that the hypothesis represents (i.e., an
-            intervention is required).
+        Args:
+            hypo_index: The index of the hypothesis we want to update.
+            depth: Estimate of depth.
+            variance: Estimate of variance.
+
+        Returns:
+            False if the estimate does not match the track that the hypothesis
+            represents (i.e., an intervention is required), True otherwise.
         """
 
         hypo = self.hypotheses[hypo_index]
@@ -650,23 +616,20 @@ class CubeNode:
         return True
 
     def best_hypothesis_index(self, depth: float, variance: float):
-        """
-        Find the closest matching hypothesis in the current hypothesis list.  This computes the normalized absolute error
-        between one-step forecast for each hypothesis currently being tracked and the input sample, and returns the index
-        of the hypothesis with the smallest error value.  If there is more than one node with the same error (unlikely
-        in practice, but possible), then the last one in the list is chosen.
+        """Find the closest matching hypothesis in the current hypothesis list.
 
-        Parameters
-        ----------
-        depth
-            current input sample to be matched
-        variance
-            current input variance to be matched
+        Computes the normalized absolute error between one-step forecast for
+        each hypothesis currently being tracked and the input sample, and
+        returns the index of the hypothesis with the smallest error value.
+        If there is more than one node with the same error, the last one in the
+        list is chosen.
 
-        Returns
-        -------
-        int
-            index to the best hypothesis
+        Args:
+            depth: Current input sample to be matched.
+            variance: Current input variance to be matched.
+
+        Returns:
+            Index to the best hypothesis, or None if no hypotheses exist.
         """
 
         best_hypo_index = None
@@ -684,19 +647,15 @@ class CubeNode:
         return best_hypo_index
 
     def choose_hypothesis(self):
-        """
-        Choose the best hypothesis for this node.  In this context, `best' means `hypothesis with most points',
-        rather than through any other metric.  This may not be the `best' until all of the data is in, but it should
-        give an idea of what's going on in the data structure at any point (particularly if it changes dramatically
-        from sample to sample)
+        """Choose the best hypothesis for this node based on point count.
 
-        Returns
-        -------
-        Hypothesis
-            the hypothesis with the most points
-        float
-            the hypothesis strength ratio for this hypothesis (how convinced CUBE is that the hypo is good)
+        In this context, 'best' means 'hypothesis with most points', rather
+        than through any other metric.
 
+        Returns:
+            Tuple containing:
+                - The hypothesis with the most points, or None.
+                - The hypothesis strength ratio for this hypothesis.
         """
         best_hypo = None
         hypo_ratio = 0.0
@@ -721,27 +680,23 @@ class CubeNode:
         return best_hypo, hypo_ratio
 
     def update_node(self, depth: float, variance: float):
-        """
-        Update the CUBE equations for this node and input.  This runs the basic filter equations, using the KF formulation,
-        and its innovations formulation.  This algorithm now includes a discounted system noise variance model to set the
-        evolution noise dynamically depending on the variance that was estimated at the previous stage (West & Harrison,
-        'Bayesian Forecasting and Dynamic Models', Springer, 2ed., 1997, ch.2) and a monitoring scheme and feed-back
-        interventions to allow the code to check that the estimates are staying in touch with the input data.  The
-        monitoring scheme is also based on West & Harrison as above, Ch.11, Sec. 11.5.1, using cumulative Bayes factors
-        and the unidirectional level shift alternate model.
+        """Update the CUBE equations for this node and input.
 
-        Parameters
-        ----------
-        depth
-            new depth estimate to incorporate
-        variance
-            new variance estimate to incorporate
+        Runs the basic filter equations, using the Kalman Filter formulation
+        and its innovations formulation. Includes a discounted system noise
+        variance model to set the evolution noise dynamically depending on the
+        variance that was estimated at the previous stage (West & Harrison,
+        'Bayesian Forecasting and Dynamic Models', Springer, 2ed., 1997, ch.2)
+        and a monitoring scheme and feedback interventions.
 
-        Returns
-        -------
-        bool
-            True if node hypothesis was updated or if this is the first update.  False if a new hypothesis had to be
-            created because data did not allow updating an existing one.
+        Args:
+            depth: New depth estimate to incorporate.
+            variance: New variance estimate to incorporate.
+
+        Returns:
+            True if node hypothesis was updated or if this is the first update.
+            False if a new hypothesis had to be created because data did not
+            allow updating an existing one.
         """
         # find the best matching hypothesis index for the current input sample given those currently being tracked
         best_idx = self.best_hypothesis_index(depth, variance)
@@ -762,14 +717,17 @@ class CubeNode:
         return True
 
     def truncate(self):
-        """
-        Identify all points that are outliers and remove them from the queue.  The definition of 'outlier' depends on
-        the self.quotient_limit attribute.  In general, the higher the value, the more extreme the difference between
+        """Identify all points that are outliers and remove them from the queue.
+
+        The definition of 'outlier' depends on the self.quotient_limit attribute.
+        In general, the higher the value, the more extreme the difference between
         mean depth and point depth must be to be considered an outlier.
 
-        In theory, the distribution of the quotient values computed should be approximately a Fisher F(1,N-2) where
-        there are N points in the input sequence.  The values of the quotients are always positive, and monotonically
-        increasing for worse outliers; therefore, one-sided critical values should be considered.
+        In theory, the distribution of the quotient values computed should be
+        approximately a Fisher F(1,N-2) where there are N points in the input
+        sequence. The values of the quotients are always positive, and
+        monotonically increasing for worse outliers; therefore, one-sided
+        critical values should be considered.
         """
 
         if self.n_queued < 3:
@@ -808,15 +766,15 @@ class CubeNode:
         )
 
     def flush_queue(self):
-        """
-        This flushes the queue into the input sequence in order (i.e., take current median, resort, repeat).  Since the
-        queue is always sorted, we can just walk the list in order, rather than having to re-sort or shift data, etc.
-        When we have an even number of points, we take the shallowest of the points first; this means that we walk the
-        list alternately to the left and right, starting to the right if the initial number of points is even, and to
-        the left if the number of points is odd.  To avoid shifting the data, we just increase the step after every
-        extraction, until we step off the LHS of the array.
+        """Flush the queue into the input sequence in order.
 
-        For a list of 10 points, the order ends up looking something like this: [4, 5, 3, 6, 2, 7, 1, 8, 0, 9]
+        Walks the list in order (taking current median, resorting, repeating)
+        without needing to re-sort or shift data. When there is an even number
+        of points, takes the shallowest of the points first (walking alternately
+        to the left and right).
+
+        For a list of 10 points, the order ends up looking like:
+        [4, 5, 3, 6, 2, 7, 1, 8, 0, 9].
         """
 
         if self.n_queued == 0:
@@ -840,15 +798,13 @@ class CubeNode:
         self.n_queued = 0
 
     def queue_fill(self, depth: float, variance: float):
-        """
-        Insert a new point into the queue, maintain depth sorted order, with greater depths last
+        """Insert a new point into the queue in depth-sorted order.
 
-        Parameters
-        ----------
-        depth
-            new depth value to add to the queue
-        variance
-            new variance value to add to the queue
+        Maintains depth sorted order, with greater depths last.
+
+        Args:
+            depth: New depth value to add to the queue.
+            variance: New variance value to add to the queue.
         """
 
         if not self.use_queue:
@@ -882,23 +838,18 @@ class CubeNode:
         self.n_queued += 1
 
     def queue_insert(self, depth: float, variance: float):
-        """
-        Insert a point in the already filled queue.  We then return the median point and insert this new point, ensuring
-        that the queue remains sorted, with greater depths first.
+        """Insert a point in the already filled queue and return median point.
 
-        Parameters
-        ----------
-        depth
-            new depth value to add to the queue
-        variance
-            new variance value to add to the queue
+        Ensures that the queue remains sorted, with greater depths first.
 
-        Returns
-        -------
-        float
-            median depth
-        float
-            median variance
+        Args:
+            depth: New depth value to add to the queue.
+            variance: New variance value to add to the queue.
+
+        Returns:
+            Tuple containing:
+                - Median depth.
+                - Median variance.
         """
 
         if not self.use_queue:
@@ -952,23 +903,19 @@ class CubeNode:
         return mdepth, mvariance
 
     def add_to_queue(self, depth: float, variance: float):
-        """
-        Insert points into the queue of estimates and insert point into the filter sequence if the queue is filled.
+        """Insert points into the queue and update filter sequence if filled.
 
-        This inserts the depth given into the queue associated with the	specified node, creating the queue if required.
-        After the queue has been primed (i.e., filled with estimates), on each call this routine extracts the median
-        value from the queue and then inserts it into the CUBE input sequence. Note that this algorithm means that the
-        queue will always be full, and hence must be flushed before extracting any depth estimates (this can also be
-        done to save memory).
+        Inserts the depth given into the queue associated with the specified
+        node. After the queue has been primed (i.e., filled with estimates), on
+        each call extracts the median value from the queue and inserts it into
+        the CUBE input sequence.
 
-        if use_queue is set to False, skips the queue entirely and runs update_node with the provided depth/variance
+        If use_queue is False, skips the queue entirely and runs update_node
+        with the provided depth/variance.
 
-        Parameters
-        ----------
-        depth
-            new depth value to add to the queue
-        variance
-            new variance value to add to the queue
+        Args:
+            depth: New depth value to add to the queue.
+            variance: New variance value to add to the queue.
         """
 
         if not self.queue:
@@ -994,22 +941,19 @@ class CubeNode:
         distance_to_node: float,
         sounding_range: float = 0.0,
     ):
-        """
-        Insert a point into the node.  This will compute the variance scale factor for the new data, and send the data
+        """Insert a point into the node.
+
+        Computes the variance scale factor for the new data and sends the data
         into the estimation queue.
 
-        Parameters
-        ----------
-        depth
-            new depth value to add to the queue
-        vertical_uncertainty
-            new vertical uncertainty value associated with the point, assumes 2 sigma
-        horizontal_uncertainty
-            new horizontal uncertainty value associated with the point, assumes 2 sigma
-        distance_to_node
-            distance from point to node
-        sounding_range
-            optional range value associated with the sounding
+        Args:
+            depth: New depth value to add to the queue.
+            vertical_uncertainty: New vertical uncertainty value associated
+                with the point, assumes 2 sigma.
+            horizontal_uncertainty: New horizontal uncertainty value associated
+                with the point, assumes 2 sigma.
+            distance_to_node: Distance from point to node.
+            sounding_range: Optional range value associated with the sounding.
         """
 
         conf_95_percent = 1.96
@@ -1069,18 +1013,15 @@ class CubeNode:
         self.nominated = None
 
     def _return_nominated_answer(self, value: tuple = ("depth", "uncertainty")):
-        """
-        Return the data for the provided value identifiers for the nominated hypothesis
+        """Return data for the provided value identifiers from nominated hypothesis.
 
-        Parameters
-        ----------
-        value
-            list of the values you want to extract from this node, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
+        Args:
+            value: Tuple or list of value identifiers to extract from this
+                node, chosen from 'depth', 'uncertainty', 'ratio',
+                'n_hypotheses'.
 
-        Returns
-        -------
-        list
-            list of floats for each value identifier provided
+        Returns:
+            List of floats for each value identifier provided.
         """
 
         data = []
@@ -1104,22 +1045,17 @@ class CubeNode:
     def _return_answer_from_hypothesis(
         self, hyp: Hypothesis, ratio: float, value: tuple = ("depth", "uncertainty")
     ):
-        """
-        Provide the answer for the given value identifiers for the given hypothesis.
+        """Provide answer for given value identifiers from the specified hypothesis.
 
-        Parameters
-        ----------
-        hyp
-            selected hypothesis to get an answer from
-        ratio
-            hypothesis strength ratio for this hypothesis
-        value
-            list of the values you want to extract from this node, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
+        Args:
+            hyp: Selected hypothesis to get an answer from.
+            ratio: Hypothesis strength ratio for this hypothesis.
+            value: Tuple or list of value identifiers to extract from this
+                node, chosen from 'depth', 'uncertainty', 'ratio',
+                'n_hypotheses'.
 
-        Returns
-        -------
-        list
-            list of floats for each value identifier provided
+        Returns:
+            List of floats for each value identifier provided.
         """
 
         data = []
@@ -1157,20 +1093,19 @@ class CubeNode:
         return data
 
     def extract_node_value(self, value: tuple = ("depth", "uncertainty")):
-        """
-        Extract a node value for each of the provided value identifiers.  These values come from either the nominated
-        hypothesis or a selected hypothesis that has the most points of all hypotheses.  If there is no hypothesis,
-        you will get a self.no_data_value for each requested value identifier.
+        """Extract a node value for each of the provided value identifiers.
 
-        Parameters
-        ----------
-        value
-            list of the values you want to extract from this node, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
+        These values come from either the nominated hypothesis or a selected
+        hypothesis that has the most points of all hypotheses. If there is no
+        hypothesis, returns self.no_data_value for each requested identifier.
 
-        Returns
-        -------
-        list
-            list of the values for each value identifier provided
+        Args:
+            value: Tuple or list of value identifiers to extract from this
+                node, chosen from 'depth', 'uncertainty', 'ratio',
+                'n_hypotheses'.
+
+        Returns:
+            List of the values for each value identifier provided.
         """
 
         self.logger.log(logging.DEBUG, f"extract_node_value: getting hypothesis answer for {value}")
@@ -1199,23 +1134,20 @@ class CubeNode:
     def extract_closest_node_value(
         self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")
     ):
-        """
-        Extract the node values for the hypothesis which is closest in depth to the supplied depth/variance point values, in a
-        minimum error sense.  If there are no depth hypotheses in this node, self.no_data_value is returned.
+        """Extract node values for hypothesis closest in depth in a minimum error sense.
 
-        Parameters
-        ----------
-        depth
-            depth value to use in the query
-        variance
-            variance value to use in the query
-        value
-            list of the values you want to extract from this node, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
+        If there are no depth hypotheses in this node, self.no_data_value is
+        returned.
 
-        Returns
-        -------
-        list
-            list of the values for each value identifier provided
+        Args:
+            depth: Depth value to use in the query.
+            variance: Variance value to use in the query.
+            value: Tuple or list of value identifiers to extract from this
+                node, chosen from 'depth', 'uncertainty', 'ratio',
+                'n_hypotheses'.
+
+        Returns:
+            List of the values for each value identifier provided.
         """
 
         if self.nominated is not None:
@@ -1261,23 +1193,17 @@ class CubeNode:
     def extract_posterior_weighted_node_value(
         self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")
     ):
-        """
-        Extract a posterior weighted best depth hypothesis using the provided depth/variance values as a guide.  Returns
-        the hypothesis value for each provided value identifier in the list.
+        """Extract posterior-weighted best depth hypothesis using guide values.
 
-        Parameters
-        ----------
-        depth
-            depth value to use in the query
-        variance
-            variance value to use in the query
-        value
-            list of the values you want to extract from this node, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
+        Args:
+            depth: Depth value to use in the query.
+            variance: Variance value to use in the query.
+            value: Tuple or list of value identifiers to extract from this
+                node, chosen from 'depth', 'uncertainty', 'ratio',
+                'n_hypotheses'.
 
-        Returns
-        -------
-        list
-            list of the values for each value identifier provided
+        Returns:
+            List of the values for each value identifier provided.
         """
 
         if self.nominated is not None:
@@ -1325,47 +1251,40 @@ class CubeNode:
         return data
 
     def return_depth(self):
-        """
-        Return the depth for the 'best' hypothesis in this node.  In this case, the 'best' hypothesis is the hypothesis
-        with the most points.  If there is no hypothesis, this returns self.no_data_value
+        """Return depth for the best hypothesis in this node.
 
-        Returns
-        -------
-        float
-            depth value for the best hypothesis
+        In this case, the 'best' hypothesis is the hypothesis with the most
+        points. If there is no hypothesis, returns self.no_data_value.
+
+        Returns:
+            Depth value for the best hypothesis.
         """
 
         return self.extract_node_value(("depth",))[0]
 
     def return_uncertainty(self):
-        """
-        Return the uncertainty for the 'best' hypothesis in this node.  In this case, the 'best' hypothesis is the hypothesis
-        with the most points.  If there is no hypothesis, this returns self.no_data_value
+        """Return uncertainty for the best hypothesis in this node.
 
-        Returns
-        -------
-        float
-            uncertainty value for the best hypothesis
+        In this case, the 'best' hypothesis is the hypothesis with the most
+        points. If there is no hypothesis, returns self.no_data_value.
+
+        Returns:
+            Uncertainty value for the best hypothesis.
         """
 
         return self.extract_node_value(("uncertainty",))[0]
 
     def return_number_of_hypotheses(self):
-        """
-        Return the total number of hypotheses in this node.
+        """Return the total number of hypotheses in this node.
 
-        Returns
-        -------
-        int
-            the total number of hypotheses in the node
+        Returns:
+            The total number of hypotheses in the node.
         """
 
         return len(self.hypotheses)
 
     def dump_hypotheses(self):
-        """
-        Print the status of each hypothesis
-        """
+        """Print the status of each hypothesis."""
 
         for hyp in self.hypotheses:
             print(
@@ -1388,32 +1307,24 @@ class CubeGrid:
         logfile: str = None,
         debug: bool = False,
     ):
-        """
+        """Initialize a CubeGrid instance.
+
         Main structure for Cube, holds CubeNodes in a grid with metadata.
 
-        Parameters
-        ----------
-        minimum_easting
-            minimum easting extent of the grid
-        maximum_northing
-            maximum northing extent of the grid
-        num_columns
-            number of columns in the grid
-        num_rows
-            number of rows in the grid
-        resolution_x
-            the resolution in the x direction of the grid (width of columns)
-        resolution_y
-            the resolution in the y direction of the grid (height of rows)
-        param
-            CubeParameters object with the default settings for the grid
-        use_queue
-            Executes the 'Reordering' step, see CUBE User Manual 3.1.  With this set to False, this step is skipped.
-            User Manual states that with multiple hypothesis implementation of CUBE, Reordering is no longer necessary.
-        logfile
-            optional path to a logfile
-        debug
-            if True, will print debug messages to the logger
+        Args:
+            minimum_easting: Minimum easting extent of the grid.
+            maximum_northing: Maximum northing extent of the grid.
+            num_columns: Number of columns in the grid.
+            num_rows: Number of rows in the grid.
+            resolution_x: The resolution in the x direction of the grid
+                (width of columns).
+            resolution_y: The resolution in the y direction of the grid
+                (height of rows).
+            param: CubeParameters object with default settings for the grid.
+            use_queue: Executes the 'Reordering' step, see CUBE User Manual 3.1.
+                With this set to False, this step is skipped.
+            logfile: Optional path to a logfile.
+            debug: If True, will print debug messages to the logger.
         """
 
         self.param = param
@@ -1552,21 +1463,16 @@ class CubeGrid:
         easting: np.ndarray,
         northing: np.ndarray,
     ):
-        """
-        Add an array of point values to the grid
+        """Add an array of point values to the grid.
 
-        Parameters
-        ----------
-        depth
-            new depth values to add to the queue
-        vertical_uncertainty
-            new vertical uncertainty values associated with the points, assumes 2 sigma
-        horizontal_uncertainty
-            new horizontal uncertainty values associated with the points, assumes 2 sigma
-        easting
-            new easting values associated with the points
-        northing
-            new northing values associated with the points
+        Args:
+            depth: New depth values to add to the queue.
+            vertical_uncertainty: New vertical uncertainty values associated
+                with the points, assumes 2 sigma.
+            horizontal_uncertainty: New horizontal uncertainty values associated
+                with the points, assumes 2 sigma.
+            easting: New easting values associated with the points.
+            northing: New northing values associated with the points.
         """
 
         depth, horizontal_uncertainty, vertical_uncertainty, easting, northing = (
@@ -1648,34 +1554,30 @@ class CubeGrid:
                     )
 
     def flush_node_queues(self):
-        """
-        Flush the queues for each node
-        """
+        """Flush the queues for each node."""
         for row in range(self.num_rows):
             for col in range(self.num_columns):
                 node = self.grid[row][col]
                 node.flush_queue()
 
     def get_grid_values(self, value: tuple = ("depth", "uncertainty"), method: str = "local"):
-        """
-        Get the values for each node in the grid for each value identifier in the value list.
+        """Get values for each node in grid for each value identifier.
 
-        Parameters
-        ----------
-        value
-            list of the values you want to extract from this grid, one of 'depth', 'uncertainty', 'ratio', 'n_hypotheses'
-        method
-            method to use in determining the appropriate hypothesis value.  'local' to use the local spatial
-            context to find the closest node with a single hypothesis and use that hypothesis depth to find the nearest
-            hypothesis in terms of depth in the current node.  'prior' to use the hypothesis with the most points
-            associated with it.  'posterior' to combine both prior and local methods to form an approximate Bayesian
-            posterior distribution.  'predict' to get the hypothesis closest to the predicted depth associated with
-            each node.
+        Args:
+            value: Tuple or list of values to extract from this grid, chosen
+                from 'depth', 'uncertainty', 'ratio', 'n_hypotheses'.
+            method: Method to use in determining the appropriate hypothesis
+                value:
+                - 'local': Use local spatial context to find closest node with
+                  a single hypothesis and use that depth.
+                - 'prior': Use the hypothesis with the most points associated.
+                - 'posterior': Combine prior and local methods to form an
+                  approximate Bayesian posterior distribution.
+                - 'predicted': Get hypothesis closest to predicted depth.
 
-        Returns
-        -------
-        list
-            list of numpy arrays for the grid, one for each variable identifier in the provided value list
+        Returns:
+            List of numpy arrays for the grid, one for each variable identifier
+            in the provided value list.
         """
         data = []
         self.logger.log(
@@ -1769,18 +1671,14 @@ class CubeGrid:
         return data
 
     def get_grid_depth(self, method: str = "local"):
-        """
-        Shortcut for get_grid_values, if you are only interested in depth.
+        """Shortcut for get_grid_values, if you are only interested in depth.
 
-        Parameters
-        ----------
-        method
-            one of 'local', 'posterior', 'prior', 'predicted'.  See get_grid_values for more info.
+        Args:
+            method: One of 'local', 'posterior', 'prior', 'predicted'. See
+                get_grid_values for more info.
 
-        Returns
-        -------
-        np.ndarray
-            2d numpy array of node depth values
+        Returns:
+            2D numpy array of node depth values.
         """
 
         if method == "local":
@@ -1793,18 +1691,14 @@ class CubeGrid:
             return self.get_grid_values(("depth",), "predicted")[0]
 
     def get_grid_uncertainty(self, method: str = "local"):
-        """
-        Shortcut for get_grid_values, if you are only interested in uncertainty.
+        """Shortcut for get_grid_values, if only interested in uncertainty.
 
-        Parameters
-        ----------
-        method
-            one of 'local', 'posterior', 'prior', 'predicted'.  See get_grid_values for more info.
+        Args:
+            method: One of 'local', 'posterior', 'prior', 'predicted'. See
+                get_grid_values for more info.
 
-        Returns
-        -------
-        np.ndarray
-            2d numpy array of node uncertainty values
+        Returns:
+            2D numpy array of node uncertainty values.
         """
 
         if method == "local":
@@ -1817,18 +1711,14 @@ class CubeGrid:
             return self.get_grid_values(("uncertainty",), "predicted")[0]
 
     def get_grid_ratio(self, method: str = "local"):
-        """
-        Shortcut for get_grid_values, if you are only interested in ratio.
+        """Shortcut for get_grid_values, if you are only interested in ratio.
 
-        Parameters
-        ----------
-        method
-            one of 'local', 'posterior', 'prior', 'predicted'.  See get_grid_values for more info.
+        Args:
+            method: One of 'local', 'posterior', 'prior', 'predicted'. See
+                get_grid_values for more info.
 
-        Returns
-        -------
-        np.ndarray
-            2d numpy array of node ratio values
+        Returns:
+            2D numpy array of node ratio values.
         """
 
         if method == "local":
@@ -1841,14 +1731,12 @@ class CubeGrid:
             return self.get_grid_values(("ratio",), "predicted")[0]
 
     def get_grid_number_hypotheses(self):
-        """
-        Shortcut for get_grid_values, if you are only interested in the number of hypotheses.  This is much faster than
-        using get_grid_values if you only want hypotheses count, as it skips the expensive hypothesis selection logic.
+        """Shortcut for get_grid_values for number of hypotheses.
 
-        Returns
-        -------
-        np.ndarray
-            2d numpy array of node hypothesis count
+        Much faster than get_grid_values as it skips hypothesis selection logic.
+
+        Returns:
+            2D numpy array of node hypothesis count.
         """
 
         # you could use self.get_grid_values(['n_hypotheses'], 'local') to get the answer
@@ -1862,18 +1750,15 @@ class CubeGrid:
         return data
 
     def get_grid_depth_and_uncertainty(self, method: str = "local"):
-        """
-        Shortcut for get_grid_values, if you are only interested in depth and uncertainty.
+        """Shortcut for get_grid_values for depth and uncertainty.
 
-        Parameters
-        ----------
-        method
-            one of 'local', 'posterior', 'prior', 'predicted'.  See get_grid_values for more info.
+        Args:
+            method: One of 'local', 'posterior', 'prior', 'predicted'. See
+                get_grid_values for more info.
 
-        Returns
-        -------
-        list
-            list of 2d numpy array of node depth and uncertainty values, in that order
+        Returns:
+            List of 2D numpy arrays of node depth and uncertainty values, in
+            that order.
         """
 
         if method == "local":
@@ -1926,62 +1811,45 @@ def run_cube_gridding(
     grid_resolution_y: float,
     **kwargs,
 ):
-    """
-    Entrance point in numba_cube, run this to run Cube.
+    """Run CUBE gridding algorithm on soundings.
 
-    Grid contains the 2d list of CubeNodes which themselves contain the list of hypotheses.  Currently an issue with
-    jitclass that this class can't be returned from an njit function, you get a pickle/serialization error, due to the
-    nested jitclass.
+    Grid contains the 2D list of CubeNodes which themselves contain the list
+    of hypotheses.
 
-    I've heard there is a way to accomplish this with structref in numba that would avoid this issue,
-    I have not looked into this yet.
+    Args:
+        depth: 1D array of depth values.
+        horizontal_uncertainty: 1D array of 2-sigma horizontal uncertainty
+            values.
+        vertical_uncertainty: 1D array of 2-sigma vertical uncertainty values.
+        easting: 1D array of UTM easting values for the soundings.
+        northing: 1D array of UTM northing values for the soundings.
+        num_columns: Number of columns in the grid.
+        num_rows: Number of rows in the grid.
+        minimum_easting: Minimum easting value for the grid to determine
+            origin.
+        maximum_northing: Maximum northing value for the grid to determine
+            origin.
+        method: Method to use in determining the appropriate hypothesis value:
+            - 'local': Use local spatial context to find closest node with a
+              single hypothesis and use that depth.
+            - 'prior': Use the hypothesis with the most points associated.
+            - 'posterior': Combine prior and local methods to form an
+              approximate Bayesian posterior distribution.
+            - 'predicted': Get hypothesis closest to predicted depth.
+        iho_order: String representation of one of the IHO order categories,
+            e.g. 'special' or 'order1a'.
+        grid_resolution_x: Grid resolution in easting (column) direction in
+            meters.
+        grid_resolution_y: Grid resolution in northing (row) direction in
+            meters.
+        **kwargs: Keyword arguments used to modify cube parameters.
 
-    Parameters
-    ----------
-    depth
-        1d array of depth values
-    horizontal_uncertainty
-        1d array of 2sigma horiz uncertainty values
-    vertical_uncertainty
-        1d array of 2sigma vert uncertainty values
-    easting
-        1d array of UTM easting values for the soundings
-    northing
-        1d array of UTM northing values for the soundings
-    num_columns
-        number of columns in the grid
-    num_rows
-        number of rows in the grid
-    minimum_easting
-        minimum easting value for the grid to determine origin
-    maximum_northing
-        maximum northing value for the grid to determine origin
-    method
-        method to use in determining the appropriate hypothesis value.  'local' to use the local spatial
-        context to find the closest node with a single hypothesis and use that hypothesis depth to find the nearest
-        hypothesis in terms of depth in the current node.  'prior' to use the hypothesis with the most points
-        associated with it.  'posterior' to combine both prior and local methods to form an approximate Bayesian
-        posterior distribution.  'predict' to get the hypothesis closest to the predicted depth associated with
-        each node.
-    iho_order
-        string representation of one of the IHO order categories, i.e. 'special' or 'order1a'
-    grid_resolution_x
-        grid resolution in easting (column) direction in meters
-    grid_resolution_y
-        grid resolution in northing (row) direction in meters
-    kwargs
-        keyword arguments used to modify cube parameters
-
-    Returns
-    -------
-    np.ndarray
-        gridded depth values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded uncertainty values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded ratio values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded hypothesis count values of shape (rows, columns) for the grid
+    Returns:
+        Tuple containing:
+            - Gridded depth values of shape (rows, columns).
+            - Gridded uncertainty values of shape (rows, columns).
+            - Gridded ratio values of shape (rows, columns).
+            - Gridded hypothesis count values of shape (rows, columns).
     """
 
     cp = CubeParameters()

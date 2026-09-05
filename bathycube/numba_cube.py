@@ -26,21 +26,19 @@ Debug = False
 
 @njit
 def get_iho_limits(iho_order: str):
-    """
-    Get fixed and variable Total Vertical Uncertainty components for the different IHO Order categories, see S-44
-    Table 1 - Minimum Bathymetry Standards for Safety of Navigation Hydrographic Surveys
+    """Get fixed and variable TVU components for IHO Order categories.
 
-    Parameters
-    ----------
-    iho_order
-        string representation of one of the IHO order categories, i.e. 'special' or 'order1a'
+    See S-44 Table 1 - Minimum Bathymetry Standards for Safety of Navigation
+    Hydrographic Surveys.
 
-    Returns
-    -------
-    float
-        'a' component, the fixed component of the TVU equation
-    float
-        'b' component, the variable component of the TVU equation
+    Args:
+        iho_order: String representation of one of the IHO order categories,
+            e.g. 'special' or 'order1a'.
+
+    Returns:
+        Tuple containing:
+            - 'a' component, the fixed component of the TVU equation.
+            - 'b' component, the variable component of the TVU equation.
     """
     if iho_order == "exclusive":
         return 0.15, 0.0075
@@ -87,9 +85,7 @@ cube_params_spec = {
 
 @jitclass(cube_params_spec)
 class CubeParameters:
-    """
-    Construct the parameters object to feed the cube algorithm the different parameters
-    """
+    """Construct the parameters object to feed the CUBE algorithm."""
 
     def __init__(
         self, iho_order: numbastr, grid_resolution_x: numbaf32, grid_resolution_y: numbaf32
@@ -516,13 +512,10 @@ grid_spec = {
 
 @jitclass(grid_spec)
 class CubeGrid:
-    """
-    Grid contains the 2d list of CubeNodes which themselves contain the list of hypotheses.  Currently an issue with
-    jitclass that this class can't be returned from an njit function, you get a pickle/serialization error, due to the
-    nested jitclass.
+    """Grid containing the 2D list of CubeNodes.
 
-    I've heard there is a way to accomplish this with structref in numba that would avoid this issue,
-    I have not looked into this yet.
+    The grid contains the 2D list of CubeNodes which themselves contain the
+    list of hypotheses.
     """
 
     def __init__(
@@ -601,15 +594,11 @@ def return_new_cubegrid(
 
 @njit
 def cube_node_new_hypothesis(node: CubeNode, new_sounding: Sounding):
-    """
-    Construct a new hypothesis, add to current list
+    """Construct a new hypothesis and add it to current list.
 
-    Parameters
-    ----------
-    node
-        Node to add a hypothesis to
-    new_sounding
-        new sounding that we are adding to the node
+    Args:
+        node: Node to add a hypothesis to.
+        new_sounding: New sounding that we are adding to the node.
     """
 
     new_hypo = return_new_hypothesis(new_sounding.depth, new_sounding.variance)
@@ -627,23 +616,20 @@ def cube_node_new_hypothesis(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_remove_hypothesis(node: CubeNode, depth: numbaf32):
-    """
-    This removes a hypothesis from a CubeNode permanently.  The hypothesis to remove is determined by the depth
-    provided.  The algorithm allows up to node.depth_tolerance difference between this depth and the depth in the
-    hypothesis, but will only remove the hypothesis if there is a unique match to the depth.  Tolerance is nominally
-    a metric whisker (slightly smaller than the imperial), or 0.01m.
+    """Remove a hypothesis from a CubeNode permanently.
 
-    Parameters
-    ----------
-    node
-        Node to remove a hypothesis from
-    depth
-        the depth of the hypothesis to remove
+    The hypothesis to remove is determined by the depth provided. The
+    algorithm allows up to node.depth_tolerance difference between this depth
+    and the depth in the hypothesis, but will only remove the hypothesis if
+    there is a unique match to the depth. Tolerance is nominally a metric
+    whisker (0.01m).
 
-    Returns
-    -------
-    Bool
-        True if hypothesis was removed
+    Args:
+        node: Node to remove a hypothesis from.
+        depth: The depth of the hypothesis to remove.
+
+    Returns:
+        True if hypothesis was removed, False otherwise.
     """
 
     if node.hypotheses is None:
@@ -681,24 +667,21 @@ def cube_node_remove_hypothesis(node: CubeNode, depth: numbaf32):
 
 @njit
 def cube_node_nominate_hypothesis(node: CubeNode, depth: numbaf32):
-    """
-    This searches the list of hypotheses for one with depth within a whisker of the specified value --- in this
-    case, a metric whisker, which is the same as 0.01m.  The hypothesis that matches, or the one that minimises
-    the distance if there is more than one, is marked as 'nominated', and is reconstructed every time without
-    running the disam. engine until the user explicitly resets the over-ride (with cube_node_reset_nomination) or
-    more data is added to the node.
+    """Nominate a hypothesis within a whisker of the specified depth.
 
-    Parameters
-    ----------
-    node
-        Node to remove a hypothesis from
-    depth
-        the depth of the hypothesis to nominate
+    Searches the list of hypotheses for one with depth within a whisker
+    (0.01m) of the specified value. The hypothesis that matches, or the
+    one that minimizes the distance if there is more than one, is marked
+    as 'nominated', and is reconstructed every time without running the
+    disambiguation engine until the user explicitly resets the override
+    (with cube_node_reset_nomination) or more data is added to the node.
 
-    Returns
-    -------
-    Bool
-        True if hypothesis was nominated
+    Args:
+        node: Node to nominate a hypothesis in.
+        depth: The depth of the hypothesis to nominate.
+
+    Returns:
+        True if hypothesis was nominated, False otherwise.
     """
 
     if node.hypotheses is None:
@@ -728,13 +711,13 @@ def cube_node_nominate_hypothesis(node: CubeNode, depth: numbaf32):
 
 @njit
 def cube_node_reset_nomination(node: CubeNode):
-    """
-    Remove the reference to the nominated hypothesis
+    """Remove the reference to the nominated hypothesis.
 
-    Returns
-    -------
-    bool
-        True if nomination was cleared
+    Args:
+        node: Node to clear the nominated hypothesis on.
+
+    Returns:
+        True if nomination was cleared.
     """
 
     if Debug:
@@ -745,13 +728,13 @@ def cube_node_reset_nomination(node: CubeNode):
 
 @njit
 def cube_node_is_nominated(node: CubeNode):
-    """
-    Return True if there is a nominated hypothesis
+    """Return True if there is a nominated hypothesis.
 
-    Returns
-    -------
-    bool
-        if there is a nominated hypothesis, return True
+    Args:
+        node: Node to check for nomination.
+
+    Returns:
+        True if there is a nominated hypothesis, False otherwise.
     """
 
     return node.nominated is not None
@@ -759,15 +742,15 @@ def cube_node_is_nominated(node: CubeNode):
 
 @njit
 def cube_node_set_preddepth(node: CubeNode, new_sounding: Sounding):
-    """
-    Set the node predicted depth.  Used to fix a node in place, hypothesis selection with 'predicted' will use this
+    """Set the node predicted depth and variance.
 
-    Parameters
-    ----------
-    node
-        Node to set the predicted depth on
-    new_sounding
-        sounding data to use to set the predicted depth, variance
+    Used to fix a node in place; hypothesis selection with 'predicted' will
+    use this.
+
+    Args:
+        node: Node to set the predicted depth on.
+        new_sounding: Sounding data to use to set the predicted depth and
+            variance.
     """
 
     if Debug:
@@ -778,24 +761,20 @@ def cube_node_set_preddepth(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_monitor_hypothesis(node: CubeNode, hypo_index: numbai32, new_sounding: Sounding):
-    """
-    Compute West % Harrison's monitoring statistics for the node hypothesis.  Depends on node.est_offset (the offset
-    we consider to be significant), node.bayes_factor_threshold (the Bayes factor threshold before intervention) and
-    node.runlength_threshold (Number of bad factors to indicate sequence failure).
+    """Compute West & Harrison's monitoring statistics for node hypothesis.
 
-    Parameters
-    ----------
-    node
-        Node containing the hypothesis we want to monitor
-    hypo_index
-        The index of the hypothesis we want to monitor
-    new_sounding
-        sounding data to use to compute the statistic
+    Depends on node.est_offset (the offset we consider to be significant),
+    node.bayes_factor_threshold (the Bayes factor threshold before
+    intervention), and node.runlength_threshold (number of bad factors to
+    indicate sequence failure).
 
-    Returns
-    -------
-    bool
-        False if an intervention is required
+    Args:
+        node: Node containing the hypothesis we want to monitor.
+        hypo_index: The index of the hypothesis we want to monitor.
+        new_sounding: Sounding data to use to compute the statistic.
+
+    Returns:
+        False if an intervention is required, True otherwise.
     """
 
     if node.hypotheses is None:
@@ -843,20 +822,17 @@ def cube_node_monitor_hypothesis(node: CubeNode, hypo_index: numbai32, new_sound
 
 @njit
 def cube_node_reset_monitor(node: CubeNode, hypo_index: numbai32):
-    """
-    Clear the monitoring data from the provided hypothesis
+    """Clear the monitoring data from the provided hypothesis.
 
-    Parameters
-    ----------
-    node
-        Node containing the hypothesis we want to clear the monitoring data from
-    hypo_index
-        The index of the hypothesis we want to clear the monitor data from
+    Args:
+        node: Node containing the hypothesis we want to clear monitoring data
+            from.
+        hypo_index: The index of the hypothesis we want to clear the monitor
+            data from.
 
-    Returns
-    -------
-    bool
-        True if the hypothesis was found and the monitoring data was cleared
+    Returns:
+        True if the hypothesis was found and monitoring data was cleared,
+        False otherwise.
     """
     if node.hypotheses is None:
         if Debug:
@@ -876,28 +852,25 @@ def cube_node_reset_monitor(node: CubeNode, hypo_index: numbai32):
 
 @njit
 def cube_node_update_hypothesis(node: CubeNode, hypo_index: numbai32, new_sounding: Sounding):
-    """
-    Update the given hypothesis (index is provided) being tracked at this node.  This implements the standard
-    univariate dynamic linear model update equations (West & Harrison, 'Bayesian Forecasting and Dynamic Models',
-    Springer, 2ed, 1997, Ch. 2), along with the Bayes factor monitoring code (W&H, Ch. 11).  The only failure mode
-    possible with this code is if the input data would cause an intervention to be requested on the current track.
-    In this case, it is the caller's responsibility to utilise the data point, since it will not be incorporated
-    into the hypothesis --- typically this would mean adding a new hypothesis and pushing it onto the stack.
+    """Update the given hypothesis being tracked at this node.
 
-    Parameters
-    ----------
-    node
-        Node containing the hypothesis we want to update
-    hypo_index
-        The index of the hypothesis we want to update
-    new_sounding
-        sounding data to use in updating
+    Implements the standard univariate dynamic linear model update
+    equations (West & Harrison, 'Bayesian Forecasting and Dynamic Models',
+    Springer, 2ed, 1997, Ch. 2), along with the Bayes factor monitoring
+    code (W&H, Ch. 11). The only failure mode possible with this code is
+    if the input data would cause an intervention to be requested on the
+    current track. In this case, it is the caller's responsibility to
+    utilize the data point, since it will not be incorporated into the
+    hypothesis.
 
-    Returns
-    -------
-    bool
-        Returns False if the estimate does not really match the track that the hypothesis represents (i.e., an
-        intervention is required).
+    Args:
+        node: Node containing the hypothesis we want to update.
+        hypo_index: The index of the hypothesis we want to update.
+        new_sounding: Sounding data to use in updating.
+
+    Returns:
+        False if the estimate does not match the track that the hypothesis
+        represents (i.e., an intervention is required), True otherwise.
     """
 
     if node.hypotheses is None:
@@ -938,25 +911,22 @@ def cube_node_update_hypothesis(node: CubeNode, hypo_index: numbai32, new_soundi
 
 @njit
 def cube_node_best_hypothesis_index(node: CubeNode, new_sounding: Sounding):
-    """
-    Find the closest matching hypothesis in the current hypothesis list.  This computes the normalized absolute error
-    between one-step forecast for each hypothesis currently being tracked and the input sample, and returns the index
-    of the hypothesis with the smallest error value.
+    """Find the closest matching hypothesis in current hypothesis list.
 
-    If there is more than one node with the same error (unlikely in practice, but possible), then the last one in the
-    list is chosen.
+    Computes the normalized absolute error between one-step forecast for
+    each hypothesis currently being tracked and the input sample, and
+    returns the index of the hypothesis with the smallest error value.
 
-    Parameters
-    ----------
-    node
-        Node containing the hypothesis we want to find the best hypothesis within
-    new_sounding
-        sounding data to use in querying
+    If there is more than one node with the same error, then the last one in
+    the list is chosen.
 
-    Returns
-    -------
-    int
-        index to the best hypothesis
+    Args:
+        node: Node containing the hypothesis we want to find the best
+            hypothesis within.
+        new_sounding: Sounding data to use in querying.
+
+    Returns:
+        Index to the best hypothesis.
     """
     if node.hypotheses is None:
         if Debug:
@@ -972,27 +942,23 @@ def cube_node_best_hypothesis_index(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_update_node(node: CubeNode, new_sounding: Sounding):
-    """
-    Update the CUBE equations for this node and input.  This runs the basic filter equations, using the KF formulation,
-    and its innovations formulation.  This algorithm now includes a discounted system noise variance model to set the
-    evolution noise dynamically depending on the variance that was estimated at the previous stage (West & Harrison,
-    'Bayesian Forecasting and Dynamic Models', Springer, 2ed., 1997, ch.2) and a monitoring scheme and feed-back
-    interventions to allow the code to check that the estimates are staying in touch with the input data.  The
-    monitoring scheme is also based on West & Harrison as above, Ch.11, Sec. 11.5.1, using cumulative Bayes factors
-    and the unidirectional level shift alternate model.
+    """Update the CUBE equations for this node and input.
 
-    Parameters
-    ----------
-    node
-        Node to update
-    new_sounding
-        sounding data to use in updating
+    Runs the basic filter equations, using the Kalman Filter formulation
+    and its innovations formulation. Includes a discounted system noise
+    variance model to set the evolution noise dynamically depending on the
+    variance that was estimated at the previous stage (West & Harrison,
+    'Bayesian Forecasting and Dynamic Models', Springer, 2ed., 1997, ch.2)
+    and a monitoring scheme and feedback interventions.
 
-    Returns
-    -------
-    bool
-        True if node hypothesis was updated or if this is the first update.  False if a new hypothesis had to be
-        created because data did not allow updating an existing one.
+    Args:
+        node: Node to update.
+        new_sounding: Sounding data to use in updating.
+
+    Returns:
+        True if node hypothesis was updated or if this is the first update.
+        False if a new hypothesis had to be created because data did not
+        allow updating an existing one.
     """
     best_idx = cube_node_best_hypothesis_index(node, new_sounding)
     if best_idx == -1:
@@ -1017,19 +983,18 @@ def cube_node_update_node(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_truncate(node: CubeNode):
-    """
-    Identify all points that are outliers and remove them from the queue.  The definition of 'outlier' depends on
-    the self.quotient_limit attribute.  In general, the higher the value, the more extreme the difference between
-    mean depth and point depth must be to be considered an outlier.
+    """Identify all points that are outliers and remove them from the queue.
 
-    In theory, the distribution of the quotient values computed should be approximately a Fisher F(1,N-2) where
-    there are N points in the input sequence.  The values of the quotients are always positive, and monotonically
-    increasing for worse outliers; therefore, one-sided critical values should be considered.
+    The definition of 'outlier' depends on node.quotient_limit. In general,
+    the higher the value, the more extreme the difference between mean depth
+    and point depth must be to be considered an outlier.
 
-    Parameters
-    ----------
-    node
-        Node to truncate
+    In theory, the distribution of the quotient values computed should be
+    approximately a Fisher F(1,N-2) where there are N points in the input
+    sequence.
+
+    Args:
+        node: Node to truncate.
     """
 
     if node.n_queued < 3:
@@ -1072,20 +1037,18 @@ def cube_node_truncate(node: CubeNode):
 
 @njit
 def cube_node_queue_flush_node(node: CubeNode):
-    """
-    This flushes the queue into the input sequence in order (i.e., take current median, resort, repeat).  Since the
-    queue is always sorted, we can just walk the list in order, rather than having to re-sort or shift data, etc.
-    When we have an even number of points, we take the shallowest of the points first; this means that we walk the
-    list alternately to the left and right, starting to the right if the initial number of points is even, and to
-    the left if the number of points is odd.  To avoid shifting the data, we just increase the step after every
-    extraction, until we step off the LHS of the array.
+    """Flush the queue into the input sequence in order.
 
-    For a list of 10 points, the order ends up looking something like this: [4, 5, 3, 6, 2, 7, 1, 8, 0, 9]
+    Walks the list in order (taking current median, resorting, repeating)
+    without needing to re-sort or shift data. When there is an even number
+    of points, takes the shallowest of the points first (walking alternately
+    to the left and right).
 
-    Parameters
-    ----------
-    node
-        Node to flush
+    For a list of 10 points, the order ends up looking like:
+    [4, 5, 3, 6, 2, 7, 1, 8, 0, 9].
+
+    Args:
+        node: Node to flush.
     """
 
     if node.n_queued == 0:
@@ -1111,23 +1074,18 @@ def cube_node_queue_flush_node(node: CubeNode):
 
 @njit
 def cube_node_choose_hypothesis(node: CubeNode):
-    """
-    Choose the best hypothesis for this node.  In this context, `best' means `hypothesis with most points',
-    rather than through any other metric.  This may not be the `best' until all of the data is in, but it should
-    give an idea of what's going on in the data structure at any point (particularly if it changes dramatically
-    from sample to sample)
+    """Choose the best hypothesis for this node based on point count.
 
-    Parameters
-    ----------
-    node
-        Node to choose the hypothesis from
+    In this context, 'best' means 'hypothesis with most points', rather
+    than through any other metric.
 
-    Returns
-    -------
-    Hypothesis
-        the hypothesis with the most points
-    float
-        the hypothesis strength ratio for this hypothesis (how convinced CUBE is that the hypo is good)
+    Args:
+        node: Node to choose the hypothesis from.
+
+    Returns:
+        Tuple containing:
+            - The hypothesis with the most points, or None.
+            - The hypothesis strength ratio for this hypothesis.
     """
 
     if node.hypotheses is None:
@@ -1148,15 +1106,13 @@ def cube_node_choose_hypothesis(node: CubeNode):
 
 @njit
 def cube_node_queue_fill(node: CubeNode, new_sounding: Sounding):
-    """
-    Insert a new point into the queue, maintain depth sorted order, with greater depths last
+    """Insert a new point into the queue in depth-sorted order.
 
-    Parameters
-    ----------
-    node
-        Node to add the sounding to
-    new_sounding
-        new sounding data to add to the queue
+    Maintains depth sorted order, with greater depths last.
+
+    Args:
+        node: Node to add the sounding to.
+        new_sounding: New sounding data to add to the queue.
     """
     if node.n_queued == 0:
         if Debug:
@@ -1189,21 +1145,16 @@ def cube_node_queue_fill(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_queue_insert(node: CubeNode, new_sounding: Sounding):
-    """
-    Insert a point in the already filled queue.  We then return the median point and insert this new point, ensuring
-    that the queue remains sorted, with greater depths first.
+    """Insert a point in the already filled queue and return median point.
 
-    Parameters
-    ----------
-    node
-        Node to add the sounding to
-    new_sounding
-        new sounding data to add to the queue
+    Ensures that the queue remains sorted, with greater depths first.
 
-    Returns
-    -------
-    Sounding
-        median sounding point data
+    Args:
+        node: Node to add the sounding to.
+        new_sounding: New sounding data to add to the queue.
+
+    Returns:
+        Median sounding point data.
     """
 
     median_index = int(np.floor(node.median_length / 2))
@@ -1253,28 +1204,19 @@ def cube_node_queue_insert(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_add_to_queue(node: CubeNode, new_sounding: Sounding):
-    """
-    Insert points into the queue of estimates and insert point into the filter sequence if the queue is filled.
+    """Insert points into the queue and update filter sequence if filled.
 
-    This inserts the depth given into the queue associated with the	specified node, creating the queue if required.
-    After the queue has been primed (i.e., filled with estimates), on each call this routine extracts the median
-    value from the queue and then inserts it into the CUBE input sequence. Note that this algorithm means that the
-    queue will always be full, and hence must be flushed before extracting any depth estimates (this can also be
-    done to save memory).
+    Inserts the depth given into the queue associated with the specified
+    node. After the queue has been primed (i.e., filled with estimates), on
+    each call extracts the median value from the queue and inserts it into
+    the CUBE input sequence.
 
-    if use_queue is set to False, skips the queue entirely and runs update_node with the provided depth/variance
+    Args:
+        node: Node to add the sounding to.
+        new_sounding: New sounding data to add to the queue.
 
-    Parameters
-    ----------
-    node
-        Node to add the sounding to
-    new_sounding
-        new sounding data to add to the queue
-
-    Returns
-    -------
-    bool
-        True if data was added
+    Returns:
+        True if data was added.
     """
 
     if Debug:
@@ -1291,23 +1233,18 @@ def cube_node_add_to_queue(node: CubeNode, new_sounding: Sounding):
 
 @njit
 def cube_node_insert(node: CubeNode, new_sounding: Sounding, distance_to_node: numbaf32):
-    """
-    Insert a point into the node.  This will compute the variance scale factor for the new data, and send the data
+    """Insert a point into the node.
+
+    Computes the variance scale factor for the new data and sends the data
     into the estimation queue.
 
-    Parameters
-    ----------
-    node
-        Node to add the sounding to
-    new_sounding
-        new sounding data added to the node
-    distance_to_node
-        distance from point to node
+    Args:
+        node: Node to add the sounding to.
+        new_sounding: New sounding data added to the node.
+        distance_to_node: Distance from point to node.
 
-    Returns
-    -------
-    bool
-        True if data was added
+    Returns:
+        True if data was added, False otherwise.
     """
 
     conf_95_percent = 1.96
@@ -1372,22 +1309,16 @@ def cube_node_insert(node: CubeNode, new_sounding: Sounding, distance_to_node: n
 
 @njit
 def cube_node_get_nominated_depth_uncertainty(node: CubeNode):
-    """
-    Return the nominated hypothesis answer
+    """Return the nominated hypothesis answer.
 
-    Parameters
-    ----------
-    node
-        node to draw the nominated hypothesis from
+    Args:
+        node: Node to draw the nominated hypothesis from.
 
-    Returns
-    -------
-    numbaf32
-        depth value from the nominated hypothesis
-    numbaf32
-        uncertainty value from the nominated hypothesis
-    numbaf32
-        ratio value from the nominated hypothesis
+    Returns:
+        Tuple containing:
+            - Depth value from the nominated hypothesis.
+            - Uncertainty value from the nominated hypothesis.
+            - Ratio value from the nominated hypothesis.
     """
 
     if node.nominated is not None:
@@ -1404,24 +1335,17 @@ def cube_node_get_nominated_depth_uncertainty(node: CubeNode):
 
 @njit
 def cube_node_get_generic_hypothesis_depth_uncertainty(node: CubeNode, hypo: Hypothesis):
-    """
-    Return the hypothesis answer
+    """Return the hypothesis answer.
 
-    Parameters
-    ----------
-    node
-        node to use in determining the cube parameters for this operation
-    hypo
-        hypothesis to draw the answer from
+    Args:
+        node: Node to use in determining the cube parameters for this operation.
+        hypo: Hypothesis to draw the answer from.
 
-    Returns
-    -------
-    numbaf32
-        depth value from the nominated hypothesis
-    numbaf32
-        uncertainty value from the nominated hypothesis
-    numbaf32
-        ratio value from the nominated hypothesis
+    Returns:
+        Tuple containing:
+            - Depth value from the hypothesis.
+            - Uncertainty value from the hypothesis.
+            - Ratio value from the hypothesis.
     """
 
     if hypo.number_of_samples > 0:
@@ -1445,22 +1369,16 @@ def cube_node_get_generic_hypothesis_depth_uncertainty(node: CubeNode, hypo: Hyp
 
 @njit
 def cube_node_extract_depth_uncertainty(node: CubeNode):
-    """
-    Return the hypothesis data for the current best estimate
+    """Return the hypothesis data for the current best estimate.
 
-    Parameters
-    ----------
-    node
-        node containing the hypotheses
+    Args:
+        node: Node containing the hypotheses.
 
-    Returns
-    -------
-    numbaf32
-        depth value from the nominated hypothesis
-    numbaf32
-        uncertainty value from the nominated hypothesis
-    numbaf32
-        ratio value from the nominated hypothesis
+    Returns:
+        Tuple containing:
+            - Depth value from the hypothesis.
+            - Uncertainty value from the hypothesis.
+            - Ratio value from the hypothesis.
     """
 
     if node.nominated is not None:
@@ -1501,26 +1419,18 @@ def cube_node_extract_depth_uncertainty(node: CubeNode):
 def cube_node_extract_closest_depth_uncertainty(
     node: CubeNode, query_depth: numbaf32, query_variance: numbaf32
 ):
-    """
-    Return the hypothesis data for the closest hypothesis to the supplied query values in the minimum error sense
+    """Return hypothesis data for closest hypothesis in minimum error sense.
 
-    Parameters
-    ----------
-    node
-        node containing the hypotheses
-    query_depth
-        depth value to use for the query
-    query_variance
-        variance value to use for the query
+    Args:
+        node: Node containing the hypotheses.
+        query_depth: Depth value to use for the query.
+        query_variance: Variance value to use for the query.
 
-    Returns
-    -------
-    numbaf32
-        depth value from the nominated hypothesis
-    numbaf32
-        uncertainty value from the nominated hypothesis
-    numbaf32
-        ratio value from the nominated hypothesis
+    Returns:
+        Tuple containing:
+            - Depth value from the closest hypothesis.
+            - Uncertainty value from the closest hypothesis.
+            - Ratio value from the closest hypothesis.
     """
 
     if (
@@ -1574,27 +1484,18 @@ def cube_node_extract_closest_depth_uncertainty(
 def cube_node_extract_posterior_depth_uncertainty(
     node: CubeNode, guide_depth: numbaf32, guide_variance: numbaf32
 ):
-    """
-    Return the hypothesis data for the nearest hypothesis using a posterior weighted best depth estimate with the
-    supplied guide depth and variance
+    """Return hypothesis data using posterior-weighted best depth estimate.
 
-    Parameters
-    ----------
-    node
-        node containing the hypotheses
-    guide_depth
-        depth value to use for the query
-    guide_variance
-        variance value to use for the query
+    Args:
+        node: Node containing the hypotheses.
+        guide_depth: Depth value to use for the query.
+        guide_variance: Variance value to use for the query.
 
-    Returns
-    -------
-    numbaf32
-        depth value from the nominated hypothesis
-    numbaf32
-        uncertainty value from the nominated hypothesis
-    numbaf32
-        ratio value from the nominated hypothesis
+    Returns:
+        Tuple containing:
+            - Depth value from the selected hypothesis.
+            - Uncertainty value from the selected hypothesis.
+            - Ratio value from the selected hypothesis.
     """
 
     if (
@@ -1647,18 +1548,13 @@ def cube_node_extract_posterior_depth_uncertainty(
 
 @njit
 def cube_node_hypothesis_count(node: CubeNode):
-    """
-    Return the number of hypotheses in the node
+    """Return the number of hypotheses in the node.
 
-    Parameters
-    ----------
-    node
-        node containing the hypotheses
+    Args:
+        node: Node containing the hypotheses.
 
-    Returns
-    -------
-    int
-        number of hypotheses in this node
+    Returns:
+        Number of hypotheses in this node.
     """
 
     if node.hypotheses is None:
@@ -1675,23 +1571,16 @@ def cube_grid_insert_points(
     easting: np.ndarray,
     northing: np.ndarray,
 ):
-    """
-    Insert all provided points into the given CubeGrid
+    """Insert all provided points into the given CubeGrid.
 
-    Parameters
-    ----------
-    cg
-        CubeGrid containing 2d list of CubeNodes that we want to add the points to
-    depth
-        1d array of depth values
-    horizontal_uncertainty
-        1d array of 2sigma horiz uncertainty values
-    vertical_uncertainty
-        1d array of 2sigma vert uncertainty values
-    easting
-        1d array of UTM easting values for the soundings
-    northing
-        1d array of UTM northing values for the soundings
+    Args:
+        cg: CubeGrid containing 2D list of CubeNodes to add the points to.
+        depth: 1D array of depth values.
+        horizontal_uncertainty: 1D array of 2-sigma horizontal uncertainty
+            values.
+        vertical_uncertainty: 1D array of 2-sigma vertical uncertainty values.
+        easting: 1D array of UTM easting values for the soundings.
+        northing: 1D array of UTM northing values for the soundings.
     """
 
     conf_95_percent = 1.96
@@ -1745,32 +1634,27 @@ def cube_grid_insert_points(
 
 @njit
 def cube_grid_extract_data(cg: CubeGrid, method: numbastr):
-    """
-    Extract the hypothesis answer from all nodes in the grid, returning gridded products for the different
-    values.
+    """Extract hypothesis answers from all nodes in the grid.
 
-    Parameters
-    ----------
-    cg
-        CubeGrid containing 2d list of CubeNodes that we want to extract the hypothesis answer from
-    method
-        method to use in determining the appropriate hypothesis value.  'local' to use the local spatial
-        context to find the closest node with a single hypothesis and use that hypothesis depth to find the nearest
-        hypothesis in terms of depth in the current node.  'prior' to use the hypothesis with the most points
-        associated with it.  'posterior' to combine both prior and local methods to form an approximate Bayesian
-        posterior distribution.  'predict' to get the hypothesis closest to the predicted depth associated with
-        each node.
+    Returns gridded products for the different values.
 
-    Returns
-    -------
-    np.ndarray
-        gridded depth values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded uncertainty values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded ratio values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded hypothesis count values of shape (rows, columns) for the grid
+    Args:
+        cg: CubeGrid containing 2D list of CubeNodes that we want to extract
+            the hypothesis answer from.
+        method: Method to use in determining the appropriate hypothesis value:
+            - 'local': Use local spatial context to find closest node with a
+              single hypothesis and use that depth.
+            - 'prior': Use the hypothesis with the most points associated.
+            - 'posterior': Combine prior and local methods to form an
+              approximate Bayesian posterior distribution.
+            - 'predicted': Get hypothesis closest to predicted depth.
+
+    Returns:
+        Tuple containing:
+            - Gridded depth values of shape (rows, columns).
+            - Gridded uncertainty values of shape (rows, columns).
+            - Gridded ratio values of shape (rows, columns).
+            - Gridded hypothesis count values of shape (rows, columns).
     """
 
     depth = cg.no_data_value
@@ -1887,49 +1771,36 @@ def cube_grid_numba(
     method: numbastr,
     params: CubeParameters,
 ):
-    """
-    Helper function for assembling the grid and running extract_data in njit space
+    """Assemble the grid and run extract_data in njit space.
 
-    Parameters
-    ----------
-    depth
-        1d array of depth values
-    horizontal_uncertainty
-        1d array of 2sigma horiz uncertainty values
-    vertical_uncertainty
-        1d array of 2sigma vert uncertainty values
-    easting
-        1d array of UTM easting values for the soundings
-    northing
-        1d array of UTM northing values for the soundings
-    num_columns
-        number of columns in the grid
-    num_rows
-        number of rows in the grid
-    minimum_easting
-        minimum easting value for the grid to determine origin
-    maximum_northing
-        maximum northing value for the grid to determine origin
-    method
-        method to use in determining the appropriate hypothesis value.  'local' to use the local spatial
-        context to find the closest node with a single hypothesis and use that hypothesis depth to find the nearest
-        hypothesis in terms of depth in the current node.  'prior' to use the hypothesis with the most points
-        associated with it.  'posterior' to combine both prior and local methods to form an approximate Bayesian
-        posterior distribution.  'predict' to get the hypothesis closest to the predicted depth associated with
-        each node.
-    params
-        CubeParameters object to use in building the grid
+    Args:
+        depth: 1D array of depth values.
+        horizontal_uncertainty: 1D array of 2-sigma horizontal uncertainty
+            values.
+        vertical_uncertainty: 1D array of 2-sigma vertical uncertainty values.
+        easting: 1D array of UTM easting values for the soundings.
+        northing: 1D array of UTM northing values for the soundings.
+        num_columns: Number of columns in the grid.
+        num_rows: Number of rows in the grid.
+        minimum_easting: Minimum easting value for the grid to determine
+            origin.
+        maximum_northing: Maximum northing value for the grid to determine
+            origin.
+        method: Method to use in determining the appropriate hypothesis value:
+            - 'local': Use local spatial context to find closest node with a
+              single hypothesis and use that depth.
+            - 'prior': Use the hypothesis with the most points associated.
+            - 'posterior': Combine prior and local methods to form an
+              approximate Bayesian posterior distribution.
+            - 'predicted': Get hypothesis closest to predicted depth.
+        params: CubeParameters object to use in building the grid.
 
-    Returns
-    -------
-    np.ndarray
-        gridded depth values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded uncertainty values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded ratio values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded hypothesis count values of shape (rows, columns) for the grid
+    Returns:
+        Tuple containing:
+            - Gridded depth values of shape (rows, columns).
+            - Gridded uncertainty values of shape (rows, columns).
+            - Gridded ratio values of shape (rows, columns).
+            - Gridded hypothesis count values of shape (rows, columns).
     """
 
     cg = return_new_cubegrid(
@@ -1964,62 +1835,45 @@ def run_cube_gridding(
     grid_resolution_y: float,
     **kwargs,
 ):
-    """
-    Entrance point in numba_cube, run this to run Cube.
+    """Run CUBE gridding algorithm on soundings using Numba.
 
-    Grid contains the 2d list of CubeNodes which themselves contain the list of hypotheses.  Currently an issue with
-    jitclass that this class can't be returned from an njit function, you get a pickle/serialization error, due to the
-    nested jitclass.
+    Grid contains the 2D list of CubeNodes which themselves contain the list
+    of hypotheses.
 
-    I've heard there is a way to accomplish this with structref in numba that would avoid this issue,
-    I have not looked into this yet.
+    Args:
+        depth: 1D array of depth values.
+        horizontal_uncertainty: 1D array of 2-sigma horizontal uncertainty
+            values.
+        vertical_uncertainty: 1D array of 2-sigma vertical uncertainty values.
+        easting: 1D array of UTM easting values for the soundings.
+        northing: 1D array of UTM northing values for the soundings.
+        num_columns: Number of columns in the grid.
+        num_rows: Number of rows in the grid.
+        minimum_easting: Minimum easting value for the grid to determine
+            origin.
+        maximum_northing: Maximum northing value for the grid to determine
+            origin.
+        method: Method to use in determining the appropriate hypothesis value:
+            - 'local': Use local spatial context to find closest node with a
+              single hypothesis and use that depth.
+            - 'prior': Use the hypothesis with the most points associated.
+            - 'posterior': Combine prior and local methods to form an
+              approximate Bayesian posterior distribution.
+            - 'predicted': Get hypothesis closest to predicted depth.
+        iho_order: String representation of one of the IHO order categories,
+            e.g. 'special' or 'order1a'.
+        grid_resolution_x: Grid resolution in easting (column) direction in
+            meters.
+        grid_resolution_y: Grid resolution in northing (row) direction in
+            meters.
+        **kwargs: Keyword arguments used to modify cube parameters.
 
-    Parameters
-    ----------
-    depth
-        1d array of depth values
-    horizontal_uncertainty
-        1d array of 2sigma horiz uncertainty values
-    vertical_uncertainty
-        1d array of 2sigma vert uncertainty values
-    easting
-        1d array of UTM easting values for the soundings
-    northing
-        1d array of UTM northing values for the soundings
-    num_columns
-        number of columns in the grid
-    num_rows
-        number of rows in the grid
-    minimum_easting
-        minimum easting value for the grid to determine origin
-    maximum_northing
-        maximum northing value for the grid to determine origin
-    method
-        method to use in determining the appropriate hypothesis value.  'local' to use the local spatial
-        context to find the closest node with a single hypothesis and use that hypothesis depth to find the nearest
-        hypothesis in terms of depth in the current node.  'prior' to use the hypothesis with the most points
-        associated with it.  'posterior' to combine both prior and local methods to form an approximate Bayesian
-        posterior distribution.  'predict' to get the hypothesis closest to the predicted depth associated with
-        each node.
-    iho_order
-        string representation of one of the IHO order categories, i.e. 'special' or 'order1a'
-    grid_resolution_x
-        grid resolution in easting (column) direction in meters
-    grid_resolution_y
-        grid resolution in northing (row) direction in meters
-    kwargs
-        keyword arguments used to modify cube parameters
-
-    Returns
-    -------
-    np.ndarray
-        gridded depth values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded uncertainty values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded ratio values of shape (rows, columns) for the grid
-    np.ndarray
-        gridded hypothesis count values of shape (rows, columns) for the grid
+    Returns:
+        Tuple containing:
+            - Gridded depth values of shape (rows, columns).
+            - Gridded uncertainty values of shape (rows, columns).
+            - Gridded ratio values of shape (rows, columns).
+            - Gridded hypothesis count values of shape (rows, columns).
     """
 
     cp = return_default_cube_parameters(iho_order, grid_resolution_x, grid_resolution_y)
@@ -2048,12 +1902,7 @@ def run_cube_gridding(
 
 
 def compile_now():
-    """
-    Numba employs justintime compiling that will make the first run of the code in this file pretty slow.  You can avoid
-    a length first run by running this function to compile ahead of time.
-
-    There is also an option to compile ahead of time and distribute pyd/so files, I haven't looked into it much yet.
-    """
+    """Precompile Numba functions ahead of time to avoid JIT compilation delay."""
     numpoints = 10
     x = np.random.uniform(low=403744.0, high=403776.0, size=numpoints)
     y = np.random.uniform(low=4122665.0, high=4122688.0, size=numpoints)
