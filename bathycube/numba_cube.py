@@ -1919,7 +1919,7 @@ def run_cube_gridding(
 
     cp = return_default_cube_parameters(iho_order, grid_resolution_x, grid_resolution_y)
     for kpam, kval in kwargs.items():
-        if kpam in cp.__dir__():
+        if kpam in dir(cp):
             setattr(cp, kpam, kval)
     if method in ["local", "posterior", "prior", "predicted"]:
         depth_grid, uncertainty_grid, ratio_grid, numhyp_grid = cube_grid_numba(

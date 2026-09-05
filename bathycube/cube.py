@@ -213,7 +213,7 @@ class CubeParameters:
                 raise ValueError(f"CubeParameters: Unable to read data from {param_file} as json")
             for ky, val in data.items():
                 if ky in self.__dict__:
-                    self.__setattr__(ky, val)
+                    setattr(self, ky, val)
                     valid_data = True
             if valid_data:
                 print(f"CubeParameters read successfully from {param_file}")
@@ -1883,7 +1883,7 @@ def run_cube_gridding(
     cp = CubeParameters()
     cp.initialize(iho_order=iho_order, grid_resolution_x=grid_resolution_x, grid_resolution_y=grid_resolution_y)
     for kpam, kval in kwargs.items():
-        if kpam in cp.__dir__():
+        if kpam in dir(cp):
             setattr(cp, kpam, kval)
     if method in ["local", "posterior", "prior", "predicted"]:
         cg = CubeGrid(
