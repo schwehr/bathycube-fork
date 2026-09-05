@@ -33,13 +33,11 @@ class StdOutFilter(logging.Filter):
         return record.levelno in (logging.DEBUG, logging.INFO)
 
 
-def return_logger(logfile: str = None, loglevel=logging.INFO):
-    """
-    If logfile is included, the file handler is added to the log so that the output is also driven to file.
+def return_logger(logfile: str | None = None, loglevel: int = logging.INFO) -> logging.Logger:
+    """If logfile is included, use file handler is to log to a file.
 
-    I disable the root logger by clearing out it's handlers because it always gets a default stderr log handler that
-    ends up duplicating messages.  Since I want the stderr messages formatted nicely, I want to setup that handler \
-    myself.
+    Disable the root logger by clearing out it's handlers because it always gets a default stderr
+    log handler that ends up duplicating messages.
 
     Parameters
     ----------
@@ -51,7 +49,6 @@ def return_logger(logfile: str = None, loglevel=logging.INFO):
     Returns
     -------
     logger: logging.Logger instance for the provided name/logfile
-
     """
 
     fmat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -60,12 +57,10 @@ def return_logger(logfile: str = None, loglevel=logging.INFO):
 
     consolelogger = logging.StreamHandler(sys.stdout)
     consolelogger.setLevel(loglevel)
-    # consolelogger.setFormatter(logging.Formatter(fmat))
     consolelogger.addFilter(StdOutFilter())
 
     errorlogger = logging.StreamHandler(sys.stderr)
     errorlogger.setLevel(logging.WARNING)
-    # errorlogger.setFormatter(logging.Formatter(fmat))
     errorlogger.addFilter(StdErrFilter())
 
     logger.addHandler(consolelogger)
