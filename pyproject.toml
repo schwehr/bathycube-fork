@@ -122,7 +122,6 @@ disable = [
     "unnecessary-dunder-call",
     "unspecified-encoding",
     "unused-argument",
-    "use-implicit-booleaness-not-comparison",
 ]
 
 [tool.coverage.report]

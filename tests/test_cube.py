@@ -253,7 +253,7 @@ def test_cube_node_add_to_queue():
     cb.add_to_queue(4.5, 1.0)
     cb.add_to_queue(16.8, 1.0)
 
-    assert cb.hypotheses == []
+    assert not cb.hypotheses
     # this should trigger update node, as you hit median length limit
     cb.add_to_queue(4.6, 1.0)
     assert len(cb.hypotheses) == 1
@@ -325,7 +325,7 @@ def test_cube_add_point_to_node():
     cb.add_point_to_node(4.5, 0.5, 0.5, 0.25)
     cb.add_point_to_node(16.8, 0.5, 0.5, 0.25)
     assert cb.n_queued == 11
-    assert cb.hypotheses == []
+    assert not cb.hypotheses
 
     dpths = [d[0] for d in cb.queue]
     assert np.allclose(dpths, np.array([4.0, 4.2, 4.4, 4.5, 5.0, 5.2, 5.5, 16.7, 16.8, 17.7, 17.8]), atol=0.01)
