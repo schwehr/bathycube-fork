@@ -90,7 +90,6 @@ init-hook = 'import sys; sys.path.append(".")'
 disable = [
     "duplicate-code",
     "exec-used",
-    "f-string-without-interpolation",
     "fixme",
     "inconsistent-return-statements",
     "invalid-name",
