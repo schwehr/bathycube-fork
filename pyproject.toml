@@ -93,7 +93,6 @@ disable = [
     "inconsistent-return-statements",
     "invalid-name",
     "line-too-long",
-    "logging-fstring-interpolation",
     "missing-class-docstring",
     "missing-function-docstring",
     "missing-module-docstring",

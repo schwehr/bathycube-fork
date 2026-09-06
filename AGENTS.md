@@ -97,6 +97,9 @@ uv run pyrefly check
 - **String Formatting**:
   - Always use modern Python **f-strings** (`f"Value: {val}"`) for string concatenation and
     formatting. Never use legacy `%` formatting or `.format()`.
+  - **Exception**: Logging calls (such as `logger.log(...)`, `logger.debug(...)`, etc.) must use
+    lazy `%` formatting (`logger.debug("Value: %s", val)`) to satisfy
+    `logging-fstring-interpolation` and defer string formatting until needed.
 
 ### Pylint & Code Health
 
