@@ -83,6 +83,8 @@ branch = true
 
 [tool.pylint.main]
 max-line-length = 120
+init-hook = 'import sys; sys.path.append(".")'
+
 
 [tool.pylint.messages_control]
 disable = [
@@ -112,7 +114,6 @@ disable = [
     "too-many-statements",
     "unbalanced-tuple-unpacking",
     "unspecified-encoding",
-    "unused-argument",
 ]
 
 [tool.coverage.report]

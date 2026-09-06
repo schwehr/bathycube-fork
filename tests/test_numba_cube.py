@@ -716,11 +716,13 @@ def test_numba_cube_py_funcs_coverage():
             self.data = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
             self.next_data = None
 
-        def get_nearest_in_depth(self, d, tol):
+        def get_nearest_in_depth(self, d, tol) -> float:
+            del d  # Unused.
+            del tol  # Unused.
             return 0
 
-        def get_item(self, idx):
-            return None
+        def get_item(self, idx) -> None:
+            del idx  # Unused.
 
     class MockNode:
         def __init__(self):
