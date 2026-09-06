@@ -712,6 +712,8 @@ def test_numba_cube_py_funcs_coverage():
     )
 
     class MockHypoNoneItem:
+        """Mock hypothesis item with None next data."""
+
         def __init__(self):
             self.data = cube.return_new_hypothesis.py_func(np.float32(10.0), np.float32(0.5))
             self.next_data = None
@@ -725,6 +727,8 @@ def test_numba_cube_py_funcs_coverage():
             del idx  # Unused.
 
     class MockNode:
+        """Mock CubeNode for testing."""
+
         def __init__(self):
             self.hypotheses = MockHypoNoneItem()
             self.depth_tolerance = 0.01
@@ -735,6 +739,8 @@ def test_numba_cube_py_funcs_coverage():
             self.stddev_to_conf_scale = 1.96
 
     class MockGrid:
+        """Mock CubeGrid for testing."""
+
         def __init__(self, num_rows, num_columns, p):
             self.num_rows = num_rows
             self.num_columns = num_columns

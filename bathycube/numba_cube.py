@@ -159,6 +159,8 @@ sounding_spec = {
 
 @jitclass(sounding_spec)
 class Sounding:
+    """Represents a sounding data point for Numba JIT processing."""
+
     def __init__(self, depth, variance, vert_unc, horiz_unc):
         self.depth = depth
         self.variance = variance
@@ -192,6 +194,8 @@ hypothesis_spec = {
 
 @jitclass(hypothesis_spec)
 class Hypothesis:
+    """Represents a bathymetric depth hypothesis for Numba JIT processing."""
+
     def __init__(self, initial_mean_estimate, initial_variance_estimate):
         self.current_depth = initial_mean_estimate  # current depth mean estimate
         self.current_variance = initial_variance_estimate  # current depth variance estimate
@@ -223,6 +227,8 @@ hypolist_spec["next_data"] = optional(hypolist_type)
 
 @jitclass(hypolist_spec)
 class HypothesisList:
+    """Linked list of Hypothesis objects for Numba JIT processing."""
+
     def __init__(self, data, next_data):
         self.data = data
         self.next_data = next_data
@@ -352,6 +358,8 @@ queuelist_spec["next_data"] = optional(queuelist_type)
 
 @jitclass(queuelist_spec)
 class QueueList:
+    """Linked list of Sounding objects for Numba JIT processing."""
+
     def __init__(self, data, next_data):
         self.data = data
         self.next_data = next_data
@@ -449,6 +457,8 @@ node_spec = {
 
 @jitclass(node_spec)
 class CubeNode:
+    """Represents a CUBE node containing soundings and hypotheses for Numba JIT processing."""
+
     def __init__(self):
         self.queue = None
         self.n_queued = 0

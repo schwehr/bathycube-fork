@@ -103,6 +103,8 @@ def get_iho_limits(iho_order: str) -> tuple[float, float]:
 
 
 class CubeParameters:
+    """CUBE algorithm parameters and configuration settings."""
+
     def __init__(self):
         self.iho_order = "order1a"
         self.grid_resolution_x = 0.0
@@ -212,6 +214,8 @@ class CubeParameters:
 
 
 class Hypothesis:
+    """Represents a single bathymetric depth hypothesis in a node."""
+
     def __init__(self, initial_mean_estimate=0.0, initial_variance_estimate=0.0):
         self.current_depth = initial_mean_estimate  # current depth mean estimate
         self.current_variance = initial_variance_estimate  # current depth variance estimate
@@ -1359,6 +1363,8 @@ class CubeNode:
 
 
 class CubeGrid:
+    """Represents a 2D bathymetric grid of CUBE nodes."""
+
     def __init__(
         self,
         minimum_easting: float,
