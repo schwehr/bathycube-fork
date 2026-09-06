@@ -1,11 +1,8 @@
 """Combined Uncertainty and Bathymetry Estimator (CUBE) module.
 
-Python implementation of the CUBE module, Combined Uncertainty and Bathymetry
-Estimator, done by Eric Younkin, Feb 2022.
-
 CUBE was developed as a research project within the Center for Coastal and
 Ocean Mapping and NOAA/UNH Joint Hydrographic Center (CCOM/JHC) at the
-University of New Hampshire, starting in the fall of 2000.
+University of New Hampshire.
 """
 
 import json
@@ -13,8 +10,6 @@ import logging
 import sys
 
 import numpy as np
-
-# ex using jitclass with composition: https://stackoverflow.com/questions/38682260/how-to-nest-numba-jitclass
 
 
 class StdErrFilter(logging.Filter):
