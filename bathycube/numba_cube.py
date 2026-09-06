@@ -1,3 +1,5 @@
+"""High-performance Numba JIT-compiled CUBE implementation."""
+
 import numpy as np
 from numba import (
     deferred_type,

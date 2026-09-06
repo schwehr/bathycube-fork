@@ -1,3 +1,5 @@
+"""Tests comparing base Python and Numba CUBE implementations."""
+
 import numpy as np
 from pytest import approx
 

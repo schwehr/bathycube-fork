@@ -1,3 +1,5 @@
+"""Tests for the base Python CUBE implementation."""
+
 import json
 import logging
 import runpy

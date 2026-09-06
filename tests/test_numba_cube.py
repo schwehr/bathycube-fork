@@ -1,3 +1,5 @@
+"""Tests for the Numba CUBE implementation."""
+
 import inspect
 
 import numpy as np
