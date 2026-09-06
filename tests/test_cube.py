@@ -1,5 +1,7 @@
 """Tests for the base Python CUBE implementation."""
 
+# pylint: disable=missing-function-docstring
+
 import json
 import logging
 import runpy

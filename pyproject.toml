@@ -94,7 +94,6 @@ disable = [
     "inconsistent-return-statements",
     "invalid-name",
     "line-too-long",
-    "missing-function-docstring",
     "no-member",
     "protected-access",
     "raise-missing-from",

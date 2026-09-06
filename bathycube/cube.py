@@ -184,6 +184,7 @@ class CubeParameters:
         self.iho_percent = self.iho_percent**2
 
     def write_parameter_file(self, param_file: str):
+        """Write parameters dictionary to a JSON file."""
         try:
             with open(param_file, "w", encoding="utf-8") as outfile:
                 json.dump(self.__dict__, outfile)
@@ -192,6 +193,7 @@ class CubeParameters:
             raise ValueError(f"CubeParameters: Unable to write new parameter file to {param_file}")
 
     def open_parameter_file(self, param_file: str):
+        """Read and load parameters from a JSON file."""
         valid_data = False
         with open(param_file, encoding="utf-8") as infile:
             try:
@@ -337,18 +339,22 @@ class CubeNode:
 
     @property
     def predicted_depth(self):
+        """Get predicted depth."""
         return self._pred_depth
 
     @predicted_depth.setter
     def predicted_depth(self, new_depth: float):
+        """Set predicted depth."""
         self._pred_depth = new_depth
 
     @property
     def predicted_variance(self):
+        """Get predicted variance."""
         return self._pred_var
 
     @predicted_variance.setter
     def predicted_variance(self, new_variance: float):
+        """Set predicted variance."""
         self._pred_var = new_variance
 
     def add_hypothesis(self, depth: float, variance: float, null_hypothesis: bool = False):
@@ -1499,6 +1505,7 @@ class CubeGrid:
 
     @property
     def populated_nodes_count(self):
+        """Get count of populated nodes in the grid."""
         cnt = 0
         for row in range(self.num_rows):
             for col in range(self.num_columns):
@@ -1509,6 +1516,7 @@ class CubeGrid:
 
     @property
     def empty_nodes_count(self):
+        """Get count of empty nodes in the grid."""
         cnt = 0
         for row in range(self.num_rows):
             for col in range(self.num_columns):
@@ -1519,6 +1527,7 @@ class CubeGrid:
 
     @property
     def total_nodes_count(self):
+        """Get total number of nodes in the grid."""
         return self.num_rows * self.num_columns
 
     def insert_points(

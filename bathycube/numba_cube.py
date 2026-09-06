@@ -139,6 +139,7 @@ parameters_type = CubeParameters.class_type.instance_type
 def return_default_cube_parameters(
     iho_order: str, grid_resolution_x: float, grid_resolution_y: float
 ):
+    """Return a default CubeParameters instance."""
     cbp = CubeParameters(iho_order, grid_resolution_x, grid_resolution_y)
     return cbp
 
@@ -169,6 +170,7 @@ sounding_type = Sounding.class_type.instance_type
 def return_new_sounding(
     depth: numbaf32, variance: numbaf32, vert_unc: numbaf32, horiz_unc: numbaf32
 ):
+    """Return a new Sounding instance."""
     snd = Sounding(depth, variance, vert_unc, horiz_unc)
     return snd
 
@@ -209,6 +211,7 @@ hypothesis_type = Hypothesis.class_type.instance_type
 
 @njit
 def return_new_hypothesis(initial_mean_estimate: np.float32, initial_variance_estimate: np.float32):
+    """Return a new Hypothesis instance."""
     hypo = Hypothesis(initial_mean_estimate, initial_variance_estimate)
     return hypo
 
@@ -228,18 +231,22 @@ class HypothesisList:
         self.next_data = next_data
 
     def prepend(self, data):
+        """Prepend a new item to the hypothesis list."""
         return HypothesisList(data, self)
 
     def append(self, data):
+        """Append a new item to the hypothesis list."""
         cur = self
         while cur.next_data is not None:
             cur = cur.next_data
         cur.next_data = HypothesisList(data, None)
 
     def drop_first(self):
+        """Drop the first item from the hypothesis list."""
         return self.next_data
 
     def insert(self, data, index: int):
+        """Insert an item at the specified index."""
         added = False
         if index > 0:
             cur = self
@@ -256,6 +263,7 @@ class HypothesisList:
                 self.append(data)
 
     def remove(self, index: int):
+        """Remove and return item at specified index."""
         cur = self
         idx = 0
         while cur.next_data is not None:
@@ -268,6 +276,7 @@ class HypothesisList:
         return None
 
     def get_data(self):
+        """Get list of all data items."""
         cur = self
         outdata = [self.data]
         while cur.next_data is not None:
@@ -276,6 +285,7 @@ class HypothesisList:
         return outdata
 
     def get_item(self, index: int):
+        """Get item at specified index."""
         cur = self
         if index == 0:
             return cur.data
@@ -288,6 +298,7 @@ class HypothesisList:
         return None
 
     def get_nearest_in_depth(self, nearest_depth: float, depth_tolerance: float):
+        """Find nearest hypothesis in depth within tolerance."""
         cur = self
         idx = 0
         cur_diff = abs(cur.data.current_depth - nearest_depth)
@@ -305,6 +316,7 @@ class HypothesisList:
         return cur_index
 
     def get_nearest_min_error(self, depth: float, variance: float):
+        """Find hypothesis with minimum normalized error."""
         cur = self
         cur_index = 0
         idx = 0
@@ -323,6 +335,7 @@ class HypothesisList:
         return cur_index
 
     def get_max_sample(self):
+        """Get hypothesis with maximum sample count."""
         cur = self
         cur_index = 0
         idx = 0
@@ -359,18 +372,22 @@ class QueueList:
         self.next_data = next_data
 
     def prepend(self, data):
+        """Prepend a new item to the queue list."""
         return QueueList(data, self)
 
     def append(self, data):
+        """Append a new item to the queue list."""
         cur = self
         while cur.next_data is not None:
             cur = cur.next_data
         cur.next_data = QueueList(data, None)
 
     def drop_first(self):
+        """Drop the first item from the queue list."""
         return self.next_data
 
     def insert(self, data, index: int):
+        """Insert an item at the specified index."""
         added = False
         if index > 0:
             cur = self
@@ -387,6 +404,7 @@ class QueueList:
                 self.append(data)
 
     def remove(self, index: int):
+        """Remove and return item at specified index."""
         cur = self
         idx = 0
         while cur.next_data is not None:
@@ -399,6 +417,7 @@ class QueueList:
         return None
 
     def get_data(self):
+        """Get list of all data items."""
         cur = self
         outdata = [self.data]
         while cur.next_data is not None:
@@ -407,6 +426,7 @@ class QueueList:
         return outdata
 
     def get_item(self, index: int):
+        """Get item at specified index."""
         cur = self
         if index == 0:
             return cur.data
@@ -485,6 +505,7 @@ node_type = CubeNode.class_type.instance_type
 
 @njit
 def return_new_cubenode():
+    """Return a new CubeNode instance."""
     return CubeNode()
 
 
@@ -588,6 +609,7 @@ def return_new_cubegrid(
     resolution_y: numbaf64,
     params: parameters_type,
 ):
+    """Return a new CubeGrid instance."""
     # due to pickling errors in nested numba jitclasses, you cannot return this class and access it outside of njit functions
     # https://github.com/numba/numba/issues/6640
     cg = CubeGrid(

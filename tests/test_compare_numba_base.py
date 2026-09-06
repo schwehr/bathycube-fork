@@ -1,5 +1,7 @@
 """Tests comparing base Python and Numba CUBE implementations."""
 
+# pylint: disable=missing-function-docstring
+
 import numpy as np
 from pytest import approx
 

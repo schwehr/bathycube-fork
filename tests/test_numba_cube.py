@@ -1,5 +1,7 @@
 """Tests for the Numba CUBE implementation."""
 
+# pylint: disable=missing-function-docstring
+
 import inspect
 
 import numpy as np
