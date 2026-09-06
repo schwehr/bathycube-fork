@@ -523,14 +523,14 @@ def test_cube_parameters_io(tmp_path):
 
     # Test error handling on read invalid json
     bad_json = str(tmp_path / "bad.json")
-    with open(bad_json, "w") as f:
+    with open(bad_json, "w", encoding="utf-8") as f:
         f.write("invalid json content")
     with pytest.raises(ValueError):
         param2.open_parameter_file(bad_json)
 
     # Test read json with no matching keys
     empty_json = str(tmp_path / "empty.json")
-    with open(empty_json, "w") as f:
+    with open(empty_json, "w", encoding="utf-8") as f:
         f.write(json.dumps({"unknown_key": 123}))
     param2.open_parameter_file(empty_json)
 

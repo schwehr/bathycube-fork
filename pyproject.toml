@@ -113,7 +113,6 @@ disable = [
     "too-many-public-methods",
     "too-many-statements",
     "unbalanced-tuple-unpacking",
-    "unspecified-encoding",
 ]
 
 [tool.coverage.report]

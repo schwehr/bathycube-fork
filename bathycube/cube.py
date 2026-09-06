@@ -188,7 +188,7 @@ class CubeParameters:
 
     def write_parameter_file(self, param_file: str):
         try:
-            with open(param_file, "w") as outfile:
+            with open(param_file, "w", encoding="utf-8") as outfile:
                 json.dump(self.__dict__, outfile)
                 print(f"New CubeParameters file written to {param_file}")
         except:
@@ -196,7 +196,7 @@ class CubeParameters:
 
     def open_parameter_file(self, param_file: str):
         valid_data = False
-        with open(param_file) as infile:
+        with open(param_file, encoding="utf-8") as infile:
             try:
                 data = json.load(infile)
             except:
