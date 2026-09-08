@@ -139,7 +139,7 @@ class CubeParameters:
         #   use input sample variance, and 'max' to report the greater of the two
         self.variance_selection = "cube"
 
-    def _get_iho_limits(self):
+    def _get_iho_limits(self) -> tuple[float, float]:
         """Get fixed and variable TVU components for IHO Order categories.
 
         See S-44 Table 1 - Minimum Bathymetry Standards for Safety of
@@ -183,7 +183,7 @@ class CubeParameters:
         self.iho_fixed = self.iho_fixed**2
         self.iho_percent = self.iho_percent**2
 
-    def write_parameter_file(self, param_file: str):
+    def write_parameter_file(self, param_file: str) -> None:
         """Write parameters dictionary to a JSON file."""
         try:
             with open(param_file, "w", encoding="utf-8") as outfile:
@@ -192,7 +192,7 @@ class CubeParameters:
         except:
             raise ValueError(f"CubeParameters: Unable to write new parameter file to {param_file}")
 
-    def open_parameter_file(self, param_file: str):
+    def open_parameter_file(self, param_file: str) -> None:
         """Read and load parameters from a JSON file."""
         valid_data = False
         with open(param_file, encoding="utf-8") as infile:
@@ -357,7 +357,7 @@ class CubeNode:
         """Set predicted variance."""
         self._pred_var = new_variance
 
-    def add_hypothesis(self, depth: float, variance: float, null_hypothesis: bool = False):
+    def add_hypothesis(self, depth: float, variance: float, null_hypothesis: bool = False) -> None:
         """Add a specific depth hypothesis to the current list.
 
         Args:
@@ -380,7 +380,7 @@ class CubeNode:
         )
         self.hypotheses.append(new_hypo)
 
-    def remove_hypothesis(self, depth: float):
+    def remove_hypothesis(self, depth: float) -> None:
         """Remove a hypothesis from a CubeNode permanently.
 
         The hypothesis to remove is determined by the depth provided. The
@@ -424,7 +424,7 @@ class CubeNode:
                 f"remove_hypothesis: Found multiple hypothesis at depth {depth} +- {self.depth_tolerance}, unable to remove a single hypothesis"
             )
 
-    def nominate_hypothesis(self, depth: float):
+    def nominate_hypothesis(self, depth: float) -> None:
         """Nominate a hypothesis within a whisker of the specified depth.
 
         Searches the list of hypotheses for one with depth within a whisker
@@ -472,13 +472,13 @@ class CubeNode:
                 self.depth_tolerance,
             )
 
-    def clear_nomination(self):
+    def clear_nomination(self) -> None:
         """Remove the reference to the nominated hypothesis."""
 
         self.nominated = None
         self.logger.log(logging.DEBUG, "clear_nomination: remove nominated hypothesis")
 
-    def has_nomination(self):
+    def has_nomination(self) -> bool:
         """Return True if there is a nominated hypothesis.
 
         Returns:
@@ -487,7 +487,7 @@ class CubeNode:
 
         return self.nominated is not None
 
-    def monitor_hypothesis(self, hypo_index: int, new_depth: float, new_variance: float):
+    def monitor_hypothesis(self, hypo_index: int, new_depth: float, new_variance: float) -> bool:
         """Compute West & Harrison's monitoring statistics for node hypothesis.
 
         Depends on self.est_offset (the offset we consider to be significant),
@@ -563,7 +563,7 @@ class CubeNode:
         self.logger.log(logging.DEBUG, "monitor_hypothesis: no intervention required")
         return True
 
-    def reset_monitor(self, hypo_index: int):
+    def reset_monitor(self, hypo_index: int) -> bool:
         """Clear the monitoring data from the provided hypothesis.
 
         Args:
@@ -585,8 +585,9 @@ class CubeNode:
         self.logger.log(
             logging.DEBUG, "reset_monitor: clear the monitoring data from the provided hypothesis"
         )
+        return True
 
-    def update_hypothesis(self, hypo_index: int, depth: float, variance: float):
+    def update_hypothesis(self, hypo_index: int, depth: float, variance: float) -> bool:
         """Update the given hypothesis being tracked at this node.
 
         Implements the standard univariate dynamic linear model update
@@ -645,7 +646,7 @@ class CubeNode:
         )
         return True
 
-    def best_hypothesis_index(self, depth: float, variance: float):
+    def best_hypothesis_index(self, depth: float, variance: float) -> int | None:
         """Find the closest matching hypothesis in the current hypothesis list.
 
         Computes the normalized absolute error between one-step forecast for
@@ -662,8 +663,8 @@ class CubeNode:
             Index to the best hypothesis, or None if no hypotheses exist.
         """
 
-        best_hypo_index = None
-        min_error = None
+        best_hypo_index: int | None = None
+        min_error: float | None = None
         for idx, hyp in enumerate(self.hypotheses):
             forecast_variance = hyp.predict_variance + variance
             error = abs((depth - hyp.predict_depth) / np.sqrt(forecast_variance))
@@ -714,7 +715,7 @@ class CubeNode:
         )
         return best_hypo, hypo_ratio
 
-    def update_node(self, depth: float, variance: float):
+    def update_node(self, depth: float, variance: float) -> bool:
         """Update the CUBE equations for this node and input.
 
         Runs the basic filter equations, using the Kalman Filter formulation
@@ -753,7 +754,7 @@ class CubeNode:
                 )
         return True
 
-    def truncate(self):
+    def truncate(self) -> None:
         """Identify all points that are outliers and remove them from the queue.
 
         The definition of 'outlier' depends on the self.quotient_limit attribute.
@@ -806,7 +807,7 @@ class CubeNode:
             logging.DEBUG, "truncate: removed %s points from the queue", len(outlier_index)
         )
 
-    def flush_queue(self):
+    def flush_queue(self) -> None:
         """Flush the queue into the input sequence in order.
 
         Walks the list in order (taking current median, resorting, repeating)
@@ -838,7 +839,7 @@ class CubeNode:
         self.queue = []
         self.n_queued = 0
 
-    def queue_fill(self, depth: float, variance: float):
+    def queue_fill(self, depth: float, variance: float) -> None:
         """Insert a new point into the queue in depth-sorted order.
 
         Maintains depth sorted order, with greater depths last.
@@ -885,7 +886,7 @@ class CubeNode:
                 self.queue.insert(0, [depth, variance])
         self.n_queued += 1
 
-    def queue_insert(self, depth: float, variance: float):
+    def queue_insert(self, depth: float, variance: float) -> tuple[float, float]:
         """Insert a point in the already filled queue and return median point.
 
         Ensures that the queue remains sorted, with greater depths first.
@@ -957,7 +958,7 @@ class CubeNode:
         )
         return mdepth, mvariance
 
-    def add_to_queue(self, depth: float, variance: float):
+    def add_to_queue(self, depth: float, variance: float) -> None:
         """Insert points into the queue and update filter sequence if filled.
 
         Inserts the depth given into the queue associated with the specified
@@ -997,7 +998,7 @@ class CubeNode:
         horizontal_uncertainty: float,
         distance_to_node: float,
         sounding_range: float = 0.0,
-    ):
+    ) -> None:
         """Insert a point into the node.
 
         Computes the variance scale factor for the new data and sends the data
@@ -1076,7 +1077,7 @@ class CubeNode:
         self.add_to_queue(depth + offset, variance)
         self.nominated = None
 
-    def _return_nominated_answer(self, value: tuple = ("depth", "uncertainty")):
+    def _return_nominated_answer(self, value: tuple = ("depth", "uncertainty")) -> list[float]:
         """Return data for the provided value identifiers from nominated hypothesis.
 
         Args:
@@ -1110,7 +1111,7 @@ class CubeNode:
 
     def _return_answer_from_hypothesis(
         self, hyp: Hypothesis, ratio: float, value: tuple = ("depth", "uncertainty")
-    ):
+    ) -> list[float]:
         """Provide answer for given value identifiers from the specified hypothesis.
 
         Args:
@@ -1160,7 +1161,7 @@ class CubeNode:
                 data.append(self.no_data_value)
         return data
 
-    def extract_node_value(self, value: tuple = ("depth", "uncertainty")):
+    def extract_node_value(self, value: tuple = ("depth", "uncertainty")) -> list[float]:
         """Extract a node value for each of the provided value identifiers.
 
         These values come from either the nominated hypothesis or a selected
@@ -1203,7 +1204,7 @@ class CubeNode:
 
     def extract_closest_node_value(
         self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")
-    ):
+    ) -> list[float]:
         """Extract node values for hypothesis closest in depth in a minimum error sense.
 
         If there are no depth hypotheses in this node, self.no_data_value is
@@ -1262,7 +1263,7 @@ class CubeNode:
 
     def extract_posterior_weighted_node_value(
         self, depth: float, variance: float, value: tuple = ("depth", "uncertainty")
-    ):
+    ) -> list[float]:
         """Extract posterior-weighted best depth hypothesis using guide values.
 
         Args:
@@ -1320,7 +1321,7 @@ class CubeNode:
             )
         return data
 
-    def return_depth(self):
+    def return_depth(self) -> float:
         """Return depth for the best hypothesis in this node.
 
         In this case, the 'best' hypothesis is the hypothesis with the most
@@ -1332,7 +1333,7 @@ class CubeNode:
 
         return self.extract_node_value(("depth",))[0]
 
-    def return_uncertainty(self):
+    def return_uncertainty(self) -> float:
         """Return uncertainty for the best hypothesis in this node.
 
         In this case, the 'best' hypothesis is the hypothesis with the most
@@ -1344,7 +1345,7 @@ class CubeNode:
 
         return self.extract_node_value(("uncertainty",))[0]
 
-    def return_number_of_hypotheses(self):
+    def return_number_of_hypotheses(self) -> int:
         """Return the total number of hypotheses in this node.
 
         Returns:
@@ -1353,7 +1354,7 @@ class CubeNode:
 
         return len(self.hypotheses)
 
-    def dump_hypotheses(self):
+    def dump_hypotheses(self) -> None:
         """Print the status of each hypothesis."""
 
         for hyp in self.hypotheses:
@@ -1537,7 +1538,7 @@ class CubeGrid:
         vertical_uncertainty: np.ndarray,
         easting: np.ndarray,
         northing: np.ndarray,
-    ):
+    ) -> None:
         """Add an array of point values to the grid.
 
         Args:
@@ -1650,7 +1651,7 @@ class CubeGrid:
                         z, vertical_uncertainty[i], horizontal_uncertainty[i], distance_sq
                     )
 
-    def flush_node_queues(self):
+    def flush_node_queues(self) -> None:
         """Flush the queues for each node."""
         for row in range(self.num_rows):
             for col in range(self.num_columns):
@@ -1774,7 +1775,7 @@ class CubeGrid:
                     data[cnt][row, col] = node_value
         return data
 
-    def get_grid_depth(self, method: str = "local"):
+    def get_grid_depth(self, method: str = "local") -> float | None:
         """Shortcut for get_grid_values, if you are only interested in depth.
 
         Args:
@@ -1794,7 +1795,9 @@ class CubeGrid:
         if method == "predicted":
             return self.get_grid_values(("depth",), "predicted")[0]
 
-    def get_grid_uncertainty(self, method: str = "local"):
+        return
+
+    def get_grid_uncertainty(self, method: str = "local") -> float | None:
         """Shortcut for get_grid_values, if only interested in uncertainty.
 
         Args:
@@ -1814,7 +1817,9 @@ class CubeGrid:
         if method == "predicted":
             return self.get_grid_values(("uncertainty",), "predicted")[0]
 
-    def get_grid_ratio(self, method: str = "local"):
+        return
+
+    def get_grid_ratio(self, method: str = "local") -> float | None:
         """Shortcut for get_grid_values, if you are only interested in ratio.
 
         Args:
@@ -1834,6 +1839,8 @@ class CubeGrid:
         if method == "predicted":
             return self.get_grid_values(("ratio",), "predicted")[0]
 
+        return
+
     def get_grid_number_hypotheses(self):
         """Shortcut for get_grid_values for number of hypotheses.
 
@@ -1844,8 +1851,8 @@ class CubeGrid:
         """
 
         # you could use self.get_grid_values(['n_hypotheses'], 'local') to get the answer
-        #  but this would do the extra logic for determining the best hypothesis that is unnecessary here
-        #  let's shortcut this process to make it faster
+        # but this would do the extra logic for determining the best hypothesis that is unnecessary here
+        # let's shortcut this process to make it faster.
         data = np.full((self.num_rows, self.num_columns), self.no_data_value)
         for row in range(self.num_rows):
             for col in range(self.num_columns):
