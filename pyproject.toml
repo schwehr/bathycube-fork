@@ -97,7 +97,6 @@ disable = [
     "no-member",
     "protected-access",
     "raise-missing-from",
-    "redefined-outer-name",
     "too-few-public-methods",
     "too-many-arguments",
     "too-many-branches",
